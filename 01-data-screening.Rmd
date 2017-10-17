@@ -1,0 +1,124 @@
+---
+title: "Data screening"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  comment = "#>", 
+  collapse = TRUE)
+```
+
+## Data-screening for this mispronunciation experiment
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+df_blocks <- readr::read_csv("data-raw/blocks.csv")
+df_looks <- readr::read_csv("data-raw/looks.csv.gz")
+df_trials <- readr::read_csv("data-raw/trials.csv")
+```
+
+
+In order to aggregate looks with my littlelisteners package, we need to define 
+a response coding definition so it knows what's a target, what's offscreen, etc.
+
+```{r}
+library(littlelisteners)
+def <- create_response_def(
+  label = "LWL scheme",
+  primary = "Target",
+  others = "Distractor",
+  elsewhere = "tracked", 
+  missing = NA)
+```
+
+We identify trials with more than 50% missing data during some analysis
+window (here 300--1800 ms).
+
+```{r}
+missing_data_per_trial <- df_looks %>% 
+  # Offset by 20 ms because the data binned into 50ms bins: I.e., the frame at
+  # 285ms is part of the [285, 300, 315] ms bin, so that frame needs to part of
+  # the data screening.
+  filter(between(Time, 280, 1820)) %>% 
+  aggregate_looks(def, Study + ResearchID + TrialID ~ GazeByImageAOI) %>% 
+  select(Study:TrialID, PropNA)
+
+missing_data_per_trial
+
+
+```
+
+The trial quality breaks down like so:
+
+```{r}
+missing_data_per_trial %>% 
+  count(PropNA >= 0.5) %>% 
+  rename(`Num Trials` = n) %>% 
+  knitr::kable()
+```
+
+
+Next, we drop individual trials with more than 50% missing data.
+
+```{r}
+df_trials_to_drop <- df_looks %>% 
+  anti_join(df_blocks_to_drop) %>% 
+  filter(between(Time, 280, 1820)) %>% 
+  lookr::AggregateLooks(Block_Task + Study + ResearchID + Block_Basename + 
+                          Trial_TrialNo ~ GazeByImageAOI) %>% 
+  as_data_frame() %>% 
+  filter(PropNA > .5) %>% 
+  select(Block_Task:Trial_TrialNo, PropNA) %>% 
+  mutate(PropNA = round(PropNA, 3)) %>% 
+  print()
+
+df_looks <- df_looks %>% 
+  anti_join(df_blocks_to_drop) %>% 
+  anti_join(df_trials_to_drop)
+```
+
+Next, we need to exclude participants who no longer have a match.
+
+```{r}
+df_leftover <- df_looks %>% 
+  distinct(Study, ResearchID) %>% 
+  inner_join(df_matches)
+
+df_leftover %>% 
+  count(Group) %>% 
+  ungroup() %>% 
+  rename(NumChildren = n)
+
+df_singletons <- df_leftover %>% 
+  count(Block_Task, Matching_PairNumber) %>% 
+  ungroup() %>% 
+  rename(NumChildrenInPair = n) %>% 
+  filter(NumChildrenInPair == 1)
+df_singletons
+
+
+df_looks <- df_looks %>% 
+  inner_join(df_matches %>% 
+               select(Group, Matching_PairNumber, Study, ResearchID)) %>% 
+  anti_join(df_singletons)
+```
+
+Now there will be the same number of children in each group x task.
+
+```{r}
+df_looks %>% 
+  distinct(Block_Task, Group, Study, ResearchID) %>% 
+  count(Block_Task, Group) %>% 
+  ungroup() %>% 
+  rename(NumChildren = n)
+
+# Make sure there are 2 children in every matching pair
+df_looks %>% 
+  distinct(Matching_PairNumber, Group, Study, ResearchID) %>% 
+  count(Block_Task, Matching_PairNumber) %>% 
+  ungroup() %>% 
+  rename(NumChildrenInPair = n) %>% 
+  filter(NumChildrenInPair != 2)
+```
