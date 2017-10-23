@@ -1,24 +1,40 @@
 ---
 title: "Data screening"
-output: github_document
+author: "Tristan Mahr"
+date: "`r Sys.Date()`"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 4
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  echo = TRUE, 
+library("knitr")
+opts_chunk$set(
+  warning = FALSE,
+  collapse = TRUE, 
   comment = "#>", 
-  collapse = TRUE)
+  message = FALSE,
+  fig.width = 8,
+  fig.asp = 0.618,
+  dpi = 300,
+  out.width = "80%")
+options(width = 100)
 ```
 
-## Data-screening for this mispronunciation experiment
+## Set up
+
+Load the data.
 
 ```{r}
 library(dplyr, warn.conflicts = FALSE)
+df_child <- readr::read_csv("data-raw/test-scores.csv") %>% 
+  select(Group, Matching_PairNumber, 
+         ChildID, ChildStudyID, Study, ResearchID, Female)
 df_blocks <- readr::read_csv("data-raw/blocks.csv")
 df_looks <- readr::read_csv("data-raw/looks.csv.gz")
 df_trials <- readr::read_csv("data-raw/trials.csv")
 ```
-
 
 In order to aggregate looks with my littlelisteners package, we need to define 
 a response coding definition so it knows what's a target, what's offscreen, etc.
@@ -33,92 +49,285 @@ def <- create_response_def(
   missing = NA)
 ```
 
-We identify trials with more than 50% missing data during some analysis
-window (here 300--1800 ms).
+Set data-screening options.
 
 ```{r}
-missing_data_per_trial <- df_looks %>% 
+screening <- list(
+  # determine amount of missing data between:
+  min_time = 300,
+  max_time = 1800,
+  # remove trials with more than ... proportion of missing data
+  max_na = .5,
+  # blocks should have at least this many trials
+  min_block = 12,
+  # conditions should have at least this many trials
+  min_condition = 6
+)
+```
+
+## Remove blocks from the bad version of the experiment
+
+The first version of the experiment ran too quickly; there wasn't much time 
+between the prompt and the reinforcer phrase.
+
+```{r}
+blocks_to_drop <- df_blocks %>% 
+  filter(Block_Version != "Standard") %>% 
+  select(BlockID:Block_Version)
+
+knitr::kable(blocks_to_drop)
+
+looks_good_version <- df_looks %>% 
+  anti_join(blocks_to_drop)
+```
+
+
+## Find unreliable trials
+
+We identify trials with more than `r screening$max_na * 100`%
+missing data during a trial window (here `r screening$min_time`--
+`r screening$max_time` ms).
+
+```{r}
+trial_quality <- looks_good_version %>% 
+  left_join(df_child) %>% 
   # Offset by 20 ms because the data binned into 50ms bins: I.e., the frame at
   # 285ms is part of the [285, 300, 315] ms bin, so that frame needs to part of
   # the data screening.
-  filter(between(Time, 280, 1820)) %>% 
-  aggregate_looks(def, Study + ResearchID + TrialID ~ GazeByImageAOI) %>% 
-  select(Study:TrialID, PropNA)
+  filter(between(Time, screening$min_time - 20, screening$max_time + 20)) 
 
-missing_data_per_trial
+range(trial_quality$Time)
 
-
+missing_data_per_trial <- trial_quality %>% 
+  aggregate_looks(def, Group + Study + ResearchID + 
+                    Matching_PairNumber + TrialID ~ GazeByImageAOI) %>% 
+  select(Group:TrialID, PropNA) %>% 
+  print()
 ```
 
-The trial quality breaks down like so:
+Count the number of bad trials that need to be excluded.
 
 ```{r}
+# Using UQ to unquote `screening$max_na` so that the created column is
+# *not* named `PropNA > screening$max_na` but instead uses the value of
+# `screening$max_na` in the column name.
 missing_data_per_trial %>% 
-  count(PropNA >= 0.5) %>% 
+  count(PropNA > UQ(screening$max_na)) %>% 
+  rename(`Num Trials` = n) %>% 
+  knitr::kable()
+
+missing_data_per_trial %>% 
+  count(Group,PropNA > UQ(screening$max_na)) %>%  
   rename(`Num Trials` = n) %>% 
   knitr::kable()
 ```
 
-
-Next, we drop individual trials with more than 50% missing data.
+Remove the bad trials.
 
 ```{r}
-df_trials_to_drop <- df_looks %>% 
-  anti_join(df_blocks_to_drop) %>% 
-  filter(between(Time, 280, 1820)) %>% 
-  lookr::AggregateLooks(Block_Task + Study + ResearchID + Block_Basename + 
-                          Trial_TrialNo ~ GazeByImageAOI) %>% 
-  as_data_frame() %>% 
-  filter(PropNA > .5) %>% 
-  select(Block_Task:Trial_TrialNo, PropNA) %>% 
-  mutate(PropNA = round(PropNA, 3)) %>% 
-  print()
+bad_trials <- missing_data_per_trial %>% 
+  filter(PropNA >= screening$max_na)
 
-df_looks <- df_looks %>% 
-  anti_join(df_blocks_to_drop) %>% 
-  anti_join(df_trials_to_drop)
+looks_clean_trials <- anti_join(looks_good_version, bad_trials)
 ```
+
+## Find unreliable blocks
+
+Count the number of trials leftover in each block.
+
+```{r}
+# Narrow down to one row per trial
+trial_counts <- looks_clean_trials %>% 
+  select(BlockID:ResearchID) %>% 
+  distinct() %>% 
+  # Count rows in each group
+  count(BlockID, Study, ResearchID) %>% 
+  arrange(n) %>% 
+  rename(`Num Trials in Block` = n)
+```
+
+Identify blocks with fewer than `r screening$min_block` trials.
+
+```{r}
+blocks_to_drop <- trial_counts %>% 
+  filter(`Num Trials in Block` < screening$min_block) 
+
+knitr::kable(blocks_to_drop)
+```
+
+Remove the blocks.
+
+```{r}
+looks_clean_blocks <- looks_clean_trials %>% 
+  anti_join(blocks_to_drop) 
+```
+
+
+
+## Enforce minimum number of trials per condition
+
+Count the number of trials leftover in each condition.
+
+```{r}
+# Narrow down to one row per trial
+condition_counts <- looks_clean_blocks %>% 
+  left_join(df_trials %>% select(TrialID, Condition)) %>% 
+  select(Study, ResearchID, TrialID, Condition) %>% 
+  distinct() %>% 
+  # Count rows in each group
+  count(Condition, Study, ResearchID) %>% 
+  # Make sure 0 trials get counted
+  tidyr::complete(tidyr::nesting(Study, ResearchID), Condition, 
+                  fill = list(n = 0)) %>% 
+  arrange(n) %>% 
+  rename(`Num Trials in Condition` = n) %>% 
+  print()
+```
+
+We want to ensure that there are at least 
+`r screening$min_condition` trials per condition.
+
+```{r}
+children_to_drop <- condition_counts %>% 
+  filter(`Num Trials in Condition` < screening$min_condition) 
+
+if (nrow(children_to_drop) == 0) {
+  print("No children to remove")
+} else {
+  knitr::kable(children_to_drop)
+}
+```
+
+Remove the children.
+
+```{r}
+looks_clean_conditions <- looks_clean_blocks %>% 
+  anti_join(children_to_drop) 
+```
+
+
+## Remove unpaired children
 
 Next, we need to exclude participants who no longer have a match.
 
 ```{r}
-df_leftover <- df_looks %>% 
+df_leftover <- looks_clean_conditions %>% 
   distinct(Study, ResearchID) %>% 
-  inner_join(df_matches)
+  left_join(df_child)
 
 df_leftover %>% 
   count(Group) %>% 
   ungroup() %>% 
-  rename(NumChildren = n)
+  rename(`Num Children` = n)
 
 df_singletons <- df_leftover %>% 
-  count(Block_Task, Matching_PairNumber) %>% 
+  count(Matching_PairNumber) %>% 
   ungroup() %>% 
   rename(NumChildrenInPair = n) %>% 
-  filter(NumChildrenInPair == 1)
-df_singletons
+  filter(NumChildrenInPair == 1) %>% 
+  print()
 
-
-df_looks <- df_looks %>% 
-  inner_join(df_matches %>% 
+df_looks_clean <- looks_clean_conditions %>% 
+  left_join(df_child %>% 
                select(Group, Matching_PairNumber, Study, ResearchID)) %>% 
   anti_join(df_singletons)
 ```
 
-Now there will be the same number of children in each group x task.
+Now, there will be the same number of children in each group x task.
 
 ```{r}
-df_looks %>% 
-  distinct(Block_Task, Group, Study, ResearchID) %>% 
-  count(Block_Task, Group) %>% 
+df_looks_clean %>% 
+  distinct(Group, Study, ResearchID) %>% 
+  count(Group) %>% 
   ungroup() %>% 
-  rename(NumChildren = n)
+  rename(`Num Children` = n) %>% 
+  knitr::kable()
 
 # Make sure there are 2 children in every matching pair
-df_looks %>% 
+df_looks_clean %>% 
   distinct(Matching_PairNumber, Group, Study, ResearchID) %>% 
-  count(Block_Task, Matching_PairNumber) %>% 
+  count(Matching_PairNumber) %>% 
   ungroup() %>% 
   rename(NumChildrenInPair = n) %>% 
   filter(NumChildrenInPair != 2)
 ```
+
+
+
+
+
+
+
+
+## Data screening counts
+
+Count the number of children and trials at each stage in data screening.
+
+```{r}
+cleaning_progression <- list(
+  `a. raw data` = df_looks,
+  `b. remove bad experiment version` = looks_good_version,
+  `c. drop bad trials` = looks_clean_trials, 
+  `d. drop sparse blocks` = looks_clean_blocks,
+  `e. drop children w sparse conditions` = looks_clean_conditions,
+  `f. drop unpaired children` = df_looks_clean) %>% 
+  bind_rows(.id = "Stage") %>% 
+  select(-Group, -Matching_PairNumber) %>% 
+  left_join(df_child) 
+
+cleaning_progression %>% 
+  group_by(Stage) %>% 
+  summarise(
+    `Num Pairs` = n_distinct(Matching_PairNumber),
+    `Num Children` = n_distinct(ChildID),
+    `Num Child-Study IDs` = n_distinct(ChildStudyID),
+    `Num Blocks` = n_distinct(BlockID),
+    `Num Trials` = n_distinct(TrialID)) %>% 
+  knitr::kable()
+
+cleaning_progression %>% 
+  group_by(Stage, Group) %>% 
+  summarise(
+    `Num Children` = n_distinct(ChildID),
+    `Num Child-Study IDs` = n_distinct(ChildStudyID),
+    `Num Blocks` = n_distinct(BlockID),
+    `Num Trials` = n_distinct(TrialID)) %>% 
+  knitr::kable()
+```
+
+
+## Clean up
+
+```{r}
+df_looks_w_info <- df_looks_clean %>% 
+  left_join(df_blocks) %>% 
+  left_join(df_trials) %>% 
+  left_join(df_child) %>% 
+  select(ChildID, ChildStudyID, Group, Matching_PairNumber, Study, ResearchID, 
+         Block_Basename, Block_Dialect, StimulusSet, Block_Version,
+         TrialNo, Condition:TargetImage, Time:GazeByAOI)
+
+df_looks_w_info %>% 
+  distinct(Block_Dialect, StimulusSet, Block_Version)
+
+df_looks_w_info <- df_looks_w_info %>% 
+  select(-Block_Dialect, -Block_Version, -StimulusSet)
+```
+
+Save clean data.
+
+```{r}
+df_looks_w_info %>% 
+  readr::write_csv(file.path(".", "data", "screened.csv.gz"))
+```
+
+Update participants data to only have children with eyetracking data.
+
+```{r}
+readr::read_csv(file.path(".", "data-raw", "test-scores.csv")) %>% 
+  semi_join(df_looks_w_info) %>% 
+  readr::write_csv(file.path(".", "data", "scores.csv"))
+```
+
+
+
