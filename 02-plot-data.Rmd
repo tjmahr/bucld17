@@ -28,6 +28,7 @@ options(width = 100)
 library(dplyr)
 library(littlelisteners)
 library(ggplot2)
+source("./plotting-helpers.R")
 looks <- readr::read_csv("./data/screened.csv.gz")
 ```
 
@@ -66,11 +67,27 @@ def <- create_response_def(
 binned <- looks %>% 
   aggregate_looks(def, Group + Study + ResearchID + 
                     Condition + BinTime ~ GazeByImageAOI) %>% 
-  rename(Time = BinTime)
+  rename(Time = BinTime) %>% 
+  mutate(Cond2 = factor(Condition, c("real", "MP", "nonsense"),
+                        labels = c("Real word", "Mispronunciation", "Nonword")),
+         Group2 = factor(Group, c("CochlearImplant", "NormalHearing"), 
+                         labels = c("Cochlear implant", "Normal hearing")))
 
 ggplot(binned) + 
-  aes(x = Time, y = Prop, color = Group, shape = Condition) + 
-  stat_summary()
+  aes(x = Time, y = Prop, color = Group2) + 
+  hline_chance() +
+  vline_onset() +
+  stat_mean_se() + 
+  facet_wrap("Cond2") + 
+  labs(
+    x = plot_text$x_time, 
+    y = plot_text$y_target, 
+    caption = plot_text$caption_mean_se,
+    color = plot_text$group) + 
+  legend_top()
+  
+  
+  
 
 # binned <- looks %>% 
 #   aggregate_looks(def, Bias_ImageAOI + Group + Study + ResearchID + 
