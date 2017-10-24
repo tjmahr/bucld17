@@ -1,0 +1,86 @@
+---
+title: "Plot the eyetracking data"
+author: "Tristan Mahr"
+date: "`r Sys.Date()`"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+opts_chunk$set(
+  warning = FALSE,
+  collapse = TRUE, 
+  comment = "#>", 
+  message = FALSE,
+  fig.width = 8,
+  fig.asp = 0.618,
+  dpi = 300,
+  out.width = "80%")
+options(width = 100)
+```
+
+## Set up
+
+```{r, results = 'hide'}
+library(dplyr)
+library(littlelisteners)
+library(ggplot2)
+looks <- readr::read_csv("./data/screened.csv.gz")
+```
+
+## Data prep
+
+### Downsample into 50ms bins
+
+
+```{r}
+times <- looks %>% 
+  distinct(Time) %>% 
+  arrange(Time) %>% 
+  trim_to_bin_width(bin_width = 3, key_time = 0, key_position = 2, Time,
+                    min_time = -900) %>% 
+  assign_bins(bin_width = 3, Time, bin_col = "Bin") %>% 
+  group_by(Bin) %>% 
+  mutate(BinTime = median(Time) %>% round(-1))
+
+looks <- looks %>% 
+  inner_join(times)
+```
+
+In order to aggregate looks with my littlelisteners package, we need to define 
+a response coding definition so it knows what's a target, what's offscreen, etc.
+
+```{r}
+def <- create_response_def(
+  label = "LWL scheme",
+  primary = "Target",
+  others = "Distractor",
+  elsewhere = "tracked", 
+  missing = NA)
+```
+
+```{r}
+binned <- looks %>% 
+  aggregate_looks(def, Group + Study + ResearchID + 
+                    Condition + BinTime ~ GazeByImageAOI) %>% 
+  rename(Time = BinTime)
+
+ggplot(binned) + 
+  aes(x = Time, y = Prop, color = Group, shape = Condition) + 
+  stat_summary()
+
+# binned <- looks %>% 
+#   aggregate_looks(def, Bias_ImageAOI + Group + Study + ResearchID + 
+#                     Condition + BinTime ~ GazeByImageAOI) %>% 
+#   rename(Time = BinTime)
+# 
+# ggplot(binned) + 
+#   aes(x = Time, y = Prop, color = Group, shape = Condition) + 
+#   stat_summary() + 
+#   facet_wrap("Bias_ImageAOI")
+```
+
+
