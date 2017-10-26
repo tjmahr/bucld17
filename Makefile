@@ -12,7 +12,10 @@ screening-results = \
 	data/scores.csv \
 	data/screened.csv.gz
 
-02-plot-data.md: 02-plot-data.Rmd $(screening-results)
+preview: 02-plot-data.md
+	open 02-plot-data.html
+
+02-plot-data.md: 02-plot-data.Rmd $(screening-results) plotting-helpers.R
 	$(rscriptv) -e 'rmarkdown::render("$<")'
 
 01-data-screening.md $(screening-results): 01-data-screening.Rmd $(database-results)
