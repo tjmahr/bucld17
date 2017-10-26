@@ -28,14 +28,13 @@ options(width = 100)
 library(dplyr)
 library(littlelisteners)
 library(ggplot2)
-source("./plotting-helpers.R")
+source("./plotting-helpers.R", encoding = "UTF8")
 looks <- readr::read_csv("./data/screened.csv.gz")
 ```
 
 ## Data prep
 
 ### Downsample into 50ms bins
-
 
 ```{r}
 times <- looks %>% 
@@ -86,9 +85,6 @@ ggplot(binned) +
     color = plot_text$group) + 
   legend_top()
   
-  
-  
-
 # binned <- looks %>% 
 #   aggregate_looks(def, Bias_ImageAOI + Group + Study + ResearchID + 
 #                     Condition + BinTime ~ GazeByImageAOI) %>% 

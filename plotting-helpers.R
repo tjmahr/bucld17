@@ -44,7 +44,7 @@ stat_mean <- wrap_with_defaults(
 stat_mean_se <- wrap_with_defaults(
   stat_summary,
   hard_defaults = list(fun.data = mean_se),
-  soft_defaults = list(geom = geom)
+  soft_defaults = list(geom = "pointrange")
 )
 
 hline_chance <- wrap_with_defaults(
