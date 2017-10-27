@@ -12,10 +12,26 @@ screening-results = \
 	data/scores.csv \
 	data/screened.csv.gz
 
-preview: 02-plot-data.md
-	open 02-plot-data.html
+model-data = \
+	data/model.csv.gz
 
-02-plot-data.md: 02-plot-data.Rmd $(screening-results) plotting-helpers.R
+all: 04-maybe-bias.md 03-models.md
+
+04-maybe-bias.md: 04-maybe-bias.Rmd data/bias.csv.gz plotting-helpers.R
+	$(rscriptv) -e 'rmarkdown::render("$<")'
+
+03-models.md: 03-models.Rmd $(model-data) plotting-helpers.R
+	$(rscriptv) -e 'rmarkdown::render("$<")'
+
+preview: 03-models.md
+	open 03-models.html
+
+check: $()
+	$(rscriptv) -e 'list.files(pattern = "unnamed", recursive = TRUE, full.names = TRUE)'
+
+
+# Main plot of growth curves also saves files used for growth curve models
+02-plot-data.md $(model-data) data/bias.csv.gz: 02-plot-data.Rmd $(screening-results) plotting-helpers.R
 	$(rscriptv) -e 'rmarkdown::render("$<")'
 
 01-data-screening.md $(screening-results): 01-data-screening.Rmd $(database-results)
@@ -36,4 +52,4 @@ clean:
 # help : Makefile
 # 	@sed -n 's/^##//p' $<
 
-.PHONY: clean
+.PHONY: clean all check

@@ -1,13 +1,14 @@
 Plot the eyetracking data
 ================
 Tristan Mahr
-2017-10-26
+2017-10-27
 
 -   [Set up](#set-up)
 -   [Visualize differences in standardized test results](#visualize-differences-in-standardized-test-results)
 -   [Visualize the eyetracking data](#visualize-the-eyetracking-data)
     -   [Downsample into 50ms bins](#downsample-into-50ms-bins)
     -   [Look at overall looks to familiar image](#look-at-overall-looks-to-familiar-image)
+    -   [Get descriptives for slide](#get-descriptives-for-slide)
     -   [Save the model-ready data](#save-the-model-ready-data)
 
 Set up
@@ -166,6 +167,264 @@ ggplot(binned) +
 
 <img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-4-1.png" width="80%" />
 
+``` r
+after_onset <- binned %>% filter(0 <= Time) 
+
+after_onset %>% 
+  filter(Group == "NormalHearing") %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition == "real")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition == "real")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-2.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-3.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "nonsense"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-4.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense", "MP")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "nonsense"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-5.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se() + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-6.png" width="80%" />
+
+``` r
+
+
+
+
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-7.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("nonsense"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-8.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("MP")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-9.png" width="80%" />
+
+``` r
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("MP"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-10.png" width="80%" />
+
 But given that the groups differ in vocabulary, we can see the same pattern of results, kind of, by binning children based on EVT scores.
 
 ``` r
@@ -188,7 +447,7 @@ binned %>%
     align_axis_right()
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png" width="80%" />
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png" width="80%" />
 
 The spaghetti plot shows that there are indeed more low-EVT children in the cochlear implant group.
 
@@ -212,7 +471,78 @@ binned %>%
     align_axis_right()
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png" width="100%" />
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-7-1.png" width="100%" />
+
+### Get descriptives for slide
+
+``` r
+scores %>% 
+  distinct(Group, ChildID, Female) %>% 
+  group_by(Group) %>% 
+  count(Female)
+#> # A tibble: 4 x 3
+#> # Groups:   Group [2]
+#>             Group Female     n
+#>             <chr>  <int> <int>
+#> 1 CochlearImplant      0    10
+#> 2 CochlearImplant      1    15
+#> 3   NormalHearing      0    10
+#> 4   NormalHearing      1    15
+
+scores %>% 
+  distinct(Group, ChildStudyID) %>% 
+  count(Group)
+#> # A tibble: 2 x 2
+#>             Group     n
+#>             <chr> <int>
+#> 1 CochlearImplant    37
+#> 2   NormalHearing    37
+
+scores %>% 
+  group_by(Group) %>% 
+  summarise(
+    Age = mean(EVT_Age) %>% round(),
+    Age_SD = sd(EVT_Age) %>% round(),
+    Min_Age = min(EVT_Age),
+    Max_Age = max(EVT_Age))
+#> # A tibble: 2 x 5
+#>             Group   Age Age_SD Min_Age Max_Age
+#>             <chr> <dbl>  <dbl>   <dbl>   <dbl>
+#> 1 CochlearImplant    51      9      34      66
+#> 2   NormalHearing    51      9      36      66
+
+scores %>% 
+  group_by(Group) %>% 
+  summarise(
+    EVT = mean(EVT_Standard, na.rm = TRUE) %>% round(),
+    EVT_SD = sd(EVT_Standard, na.rm = TRUE) %>% round(),
+    Min_EVT = min(EVT_Standard, na.rm = TRUE),
+    Max_EVT = max(EVT_Standard, na.rm = TRUE))
+#> # A tibble: 2 x 5
+#>             Group   EVT EVT_SD Min_EVT Max_EVT
+#>             <chr> <dbl>  <dbl>   <dbl>   <dbl>
+#> 1 CochlearImplant    97     19      46     131
+#> 2   NormalHearing   117     12      88     134
+
+scores %>% 
+  distinct(Group, ChildID, Maternal_Education) %>% 
+  count(Group, Maternal_Education)
+#> # A tibble: 12 x 3
+#>              Group           Maternal_Education     n
+#>              <chr>                        <chr> <int>
+#>  1 CochlearImplant               College Degree    12
+#>  2 CochlearImplant              Graduate Degree     6
+#>  3 CochlearImplant          High School Diploma     2
+#>  4 CochlearImplant      Some College (2+ years)     2
+#>  5 CochlearImplant Technical/Associate's Degree     3
+#>  6   NormalHearing               College Degree    12
+#>  7   NormalHearing              Graduate Degree     6
+#>  8   NormalHearing          High School Diploma     1
+#>  9   NormalHearing        Less Than High School     1
+#> 10   NormalHearing      Some College (2+ years)     2
+#> 11   NormalHearing Technical/Associate's Degree     2
+#> 12   NormalHearing                 Trade School     1
+```
 
 ### Save the model-ready data
 

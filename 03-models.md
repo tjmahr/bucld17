@@ -1,13 +1,13 @@
-Plot the eyetracking data
+Growth curve models
 ================
 Tristan Mahr
-2017-10-26
+2017-10-27
 
 -   [Set up](#set-up)
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)
     -   [Prep the datasets](#prep-the-datasets)
--   [Fit the models](#fit-the-models)
-    -   [EVT-less models](#evt-less-models)
+-   [Fit the vocabulary-less models](#fit-the-vocabulary-less-models)
+-   [Fit the models that include vocabulary isze](#fit-the-models-that-include-vocabulary-isze)
     -   [Mispronunciations](#mispronunciations)
     -   [Real words](#real-words)
     -   [Nonword models](#nonword-models)
@@ -38,18 +38,7 @@ looks <- looks %>%
 
 ### Prep the datasets
 
-``` r
-d_mp <- looks %>% 
-  filter(Condition == "MP")
-
-d_rw <- looks %>% 
-  filter(Condition == "real")
-
-d_ns <- looks %>% 
-  filter(Condition == "nonsense")
-```
-
-We need to remove any pairs of children in which one of the children is missing an EVT score.
+For the models with vocabulary information, we need to remove any pairs of children in which one of the children is missing an EVT score. We identify those pairs.
 
 ``` r
 no_vocab_pairs <- looks %>%
@@ -63,10 +52,32 @@ no_vocab_pairs <- looks %>%
 #> 1                  15
 ```
 
-Fit the models
---------------
+Prepare a dataset for each condition.
 
-### EVT-less models
+``` r
+d_mp <- looks %>% 
+  filter(Condition == "MP")
+
+d_rw <- looks %>% 
+  filter(Condition == "real")
+
+d_ns <- looks %>% 
+  filter(Condition == "nonsense")
+
+d_mp_evt <- d_mp %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_rw_evt <- d_rw %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_ns_evt <- d_ns %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+```
+
+Fit the vocabulary-less models
+------------------------------
+
+First, we just look at the group effects on the growth curve shapes.
 
 ``` r
 glmer_controls <- glmerControl(
@@ -230,6 +241,13 @@ summary(m_ns)
 #> GrpNrmlHr:3  0.104 -0.149  0.266  0.175 -0.707 -0.380 -0.251
 ```
 
+We can plot the growth curve fixed effects which describe how the average child in each group x condition performs.
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/overall-fits-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/overall-fits-2.png" width="80%" />
+
+Fit the models that include vocabulary isze
+-------------------------------------------
+
 ### Mispronunciations
 
 <!-- The two groups significantly differ with respect to their intercept terms, and -->
@@ -243,13 +261,13 @@ m_mp_1a <- glmer(
     Group * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_1a)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
 #> Formula: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + (ot1 +  
 #>     ot2 + ot3 | ChildStudyID)
-#>    Data: d_mp %>% anti_join(no_vocab_pairs)
+#>    Data: d_mp_evt
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
@@ -295,13 +313,13 @@ m_mp_2a <- glmer(
     EVT_GSV_z * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_2a)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
 #> Formula: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1 + ot2 + ot3) +  
 #>     (ot1 + ot2 + ot3 | ChildStudyID)
-#>    Data: d_mp %>% anti_join(no_vocab_pairs)
+#>    Data: d_mp_evt
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
@@ -349,13 +367,13 @@ m_mp_3a <- glmer(
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_3a)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
 #> Formula: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + EVT_GSV_z *  
 #>     (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
-#>    Data: d_mp %>% anti_join(no_vocab_pairs)
+#>    Data: d_mp_evt
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
@@ -410,13 +428,13 @@ m_mp_3b <- glmer(
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_3b)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
 #> Formula: cbind(Target, Distractor) ~ Group * EVT_GSV_z * (1 + ot1 + ot2 +  
 #>     ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
-#>    Data: d_mp %>% anti_join(no_vocab_pairs)
+#>    Data: d_mp_evt
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
@@ -458,9 +476,32 @@ summary(m_mp_3b)
 
 <img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" />
 
+Model comparison here should be taken with a grain of salt because we are adding predictors in batches of four coefficients (the predictor's main effect and interactions with time). AIC and BIC penalize fit measures based on number of parameters, so we are adding big penalities with each additional predictor. Consider this more of coarse look at how batches of coefficients improve model fit.
+
+``` r
+do.call(anova, unname(models))
+#> Data: d_mp_evt
+#> Models:
+#> MODEL1: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + (ot1 + 
+#> MODEL1:     ot2 + ot3 | ChildStudyID)
+#> MODEL2: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
+#> MODEL2:     (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL3: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + EVT_GSV_z * 
+#> MODEL3:     (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL4: cbind(Target, Distractor) ~ Group * EVT_GSV_z * (1 + ot1 + ot2 + 
+#> MODEL4:     ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
+#>        Df   AIC   BIC  logLik deviance   Chisq Chi Df Pr(>Chisq)   
+#> MODEL1 18 11580 11683 -5771.9    11544                             
+#> MODEL2 18 11583 11686 -5773.6    11547  0.0000      0   1.000000   
+#> MODEL3 22 11577 11703 -5766.5    11533 14.1251      4   0.006906 **
+#> MODEL4 26 11583 11731 -5765.5    11531  2.1158      4   0.714474   
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
 ### Real words
 
-Only allow EVT to interact with time<sup>1</sup>.
+Allow EVT to interact with time<sup>1</sup>, time<sup>2</sup> and time<sup>3</sup>.
 
 ``` r
 m_rw_1a <- glmer(
@@ -517,56 +558,60 @@ summary(m_rw_1a)
 
 m_rw_2a <- glmer(
   cbind(Target, Distractor) ~ 
-    EVT_GSV_z * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+   EVT_GSV_z * (1 + ot1 + ot2 + ot3) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
   data = d_rw %>% anti_join(no_vocab_pairs))
 summary(m_rw_2a)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
-#> Formula: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1) + ot2 + ot3 +  
-#>     (ot1 + ot2 + ot3 | ChildStudyID)
+#> Formula: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1 + ot2 + ot3) +  
+#>     ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID)
 #>    Data: d_rw %>% anti_join(no_vocab_pairs)
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
-#>  11229.2  11320.6  -5598.6  11197.2     2216 
+#>  11227.5  11330.3  -5595.8  11191.5     2214 
 #> 
 #> Scaled residuals: 
 #>     Min      1Q  Median      3Q     Max 
-#> -3.1909 -0.4300  0.0027  0.4454  2.4627 
+#> -3.1859 -0.4273  0.0032  0.4436  2.4542 
 #> 
 #> Random effects:
 #>  Groups       Name        Variance Std.Dev. Corr             
-#>  ChildStudyID (Intercept) 0.5307   0.7285                    
-#>               ot1         4.7063   2.1694    0.48            
-#>               ot2         1.9091   1.3817   -0.22 -0.15      
-#>               ot3         0.6881   0.8295   -0.28 -0.45  0.32
+#>  ChildStudyID (Intercept) 0.5300   0.7280                    
+#>               ot1         4.6949   2.1668    0.48            
+#>               ot2         1.7957   1.3400   -0.22 -0.16      
+#>               ot3         0.6842   0.8271   -0.28 -0.45  0.35
 #> Number of obs: 2232, groups:  ChildStudyID, 72
 #> 
 #> Fixed effects:
 #>               Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)    0.96170    0.08628  11.146  < 2e-16 ***
-#> EVT_GSV_z      0.23026    0.08605   2.676  0.00745 ** 
-#> ot1            2.56536    0.25997   9.868  < 2e-16 ***
-#> ot2           -1.04485    0.16904  -6.181 6.37e-10 ***
-#> ot3           -0.05011    0.10670  -0.470  0.63862    
-#> EVT_GSV_z:ot1  0.31969    0.24592   1.300  0.19361    
+#> (Intercept)    0.96168    0.08622  11.154  < 2e-16 ***
+#> EVT_GSV_z      0.24461    0.08612   2.840  0.00451 ** 
+#> ot1            2.56292    0.25962   9.872  < 2e-16 ***
+#> ot2           -1.04557    0.16429  -6.364 1.96e-10 ***
+#> ot3           -0.05153    0.10644  -0.484  0.62827    
+#> EVT_GSV_z:ot1  0.26832    0.25862   1.038  0.29949    
+#> EVT_GSV_z:ot2 -0.33198    0.16292  -2.038  0.04158 *  
+#> EVT_GSV_z:ot3  0.06182    0.10485   0.590  0.55545    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
 #> Correlation of Fixed Effects:
-#>             (Intr) EVT_GSV_z ot1    ot2    ot3   
-#> EVT_GSV_z    0.005                               
-#> ot1          0.481  0.009                        
-#> ot2         -0.209  0.009    -0.134              
-#> ot3         -0.255  0.002    -0.405  0.310       
-#> EVT_GSV_z:1  0.004  0.426     0.008  0.013  0.000
+#>             (Intr) EVT_GSV_z ot1    ot2    ot3    EVT_GSV_:1 EVT_GSV_:2
+#> EVT_GSV_z    0.003                                                     
+#> ot1          0.480  0.002                                              
+#> ot2         -0.213 -0.002    -0.145                                    
+#> ot3         -0.257 -0.001    -0.407  0.334                             
+#> EVT_GSV_z:1  0.002  0.479     0.002  0.001 -0.003                      
+#> EVT_GSV_z:2 -0.002 -0.215     0.001  0.002  0.005 -0.152               
+#> EVT_GSV_z:3 -0.001 -0.259    -0.002  0.005  0.000 -0.414      0.326
 
 m_rw_3a <- glmer(
   cbind(Target, Distractor) ~ 
     Group * (1 + ot1 + ot2 + ot3) + 
-    EVT_GSV_z * (1 + ot1) + 
+    EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
@@ -575,56 +620,59 @@ summary(m_rw_3a)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
 #> Formula: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + EVT_GSV_z *  
-#>     (1 + ot1) + (ot1 + ot2 + ot3 | ChildStudyID)
+#>     (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
 #>    Data: d_rw %>% anti_join(no_vocab_pairs)
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
-#>  11229.8  11344.0  -5594.9  11189.8     2212 
+#>  11230.8  11356.5  -5593.4  11186.8     2210 
 #> 
 #> Scaled residuals: 
 #>     Min      1Q  Median      3Q     Max 
-#> -3.1859 -0.4229  0.0016  0.4453  2.4506 
+#> -3.1835 -0.4238  0.0012  0.4436  2.4479 
 #> 
 #> Random effects:
 #>  Groups       Name        Variance Std.Dev. Corr             
-#>  ChildStudyID (Intercept) 0.5107   0.7146                    
-#>               ot1         4.6930   2.1663    0.50            
-#>               ot2         1.8305   1.3530   -0.21 -0.16      
-#>               ot3         0.6842   0.8272   -0.29 -0.45  0.35
+#>  ChildStudyID (Intercept) 0.5108   0.7147                    
+#>               ot1         4.6931   2.1664    0.50            
+#>               ot2         1.7721   1.3312   -0.21 -0.17      
+#>               ot3         0.6816   0.8256   -0.30 -0.45  0.36
 #> Number of obs: 2232, groups:  ChildStudyID, 72
 #> 
 #> Fixed effects:
 #>                        Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)             0.80668    0.12562   6.422 1.35e-10 ***
-#> GroupNormalHearing      0.30919    0.18538   1.668 0.095336 .  
-#> ot1                     2.61023    0.38386   6.800 1.05e-11 ***
-#> ot2                    -0.77583    0.23428  -3.312 0.000928 ***
-#> ot3                    -0.12283    0.15054  -0.816 0.414524    
-#> EVT_GSV_z               0.17233    0.09085   1.897 0.057839 .  
-#> GroupNormalHearing:ot1 -0.09201    0.56430  -0.163 0.870479    
-#> GroupNormalHearing:ot2 -0.53624    0.33076  -1.621 0.104968    
-#> GroupNormalHearing:ot3  0.14172    0.21199   0.669 0.503783    
-#> ot1:EVT_GSV_z           0.31422    0.26508   1.185 0.235874    
+#> (Intercept)             0.81056    0.12590   6.438 1.21e-10 ***
+#> GroupNormalHearing      0.30150    0.18622   1.619 0.105438    
+#> ot1                     2.59386    0.38612   6.718 1.85e-11 ***
+#> ot2                    -0.88859    0.24305  -3.656 0.000256 ***
+#> ot3                    -0.10784    0.15827  -0.681 0.495628    
+#> EVT_GSV_z               0.18188    0.09303   1.955 0.050569 .  
+#> GroupNormalHearing:ot1 -0.06123    0.57137  -0.107 0.914664    
+#> GroupNormalHearing:ot2 -0.31230    0.35934  -0.869 0.384799    
+#> GroupNormalHearing:ot3  0.11041    0.23354   0.473 0.636381    
+#> ot1:EVT_GSV_z           0.28151    0.28485   0.988 0.323025    
+#> ot2:EVT_GSV_z          -0.26686    0.17859  -1.494 0.135092    
+#> ot3:EVT_GSV_z           0.03871    0.11550   0.335 0.737502    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
 #> Correlation of Fixed Effects:
-#>             (Intr) GrpNrH ot1    ot2    ot3    EVT_GS GrNH:1 GrNH:2 GrNH:3
-#> GrpNrmlHrng -0.739                                                        
-#> ot1          0.486 -0.355                                                 
-#> ot2         -0.186  0.125 -0.136                                          
-#> ot3         -0.255  0.172 -0.384  0.326                                   
-#> EVT_GSV_z    0.304 -0.408  0.130  0.006  0.005                            
-#> GrpNrmlHr:1 -0.356  0.482 -0.737  0.091  0.261 -0.171                     
-#> GrpNrmlHr:2  0.133 -0.180  0.097 -0.707 -0.229 -0.001 -0.130              
-#> GrpNrmlHr:3  0.181 -0.246  0.272 -0.230 -0.707 -0.005 -0.373  0.330       
-#> o1:EVT_GSV_  0.134 -0.178  0.294  0.013  0.004  0.434 -0.394 -0.009 -0.005
+#>             (Intr) GrpNrH ot1    ot2    ot3    EVT_GS GrNH:1 GrNH:2 GrNH:3 o1:EVT o2:EVT
+#> GrpNrmlHrng -0.740                                                                      
+#> ot1          0.490 -0.363                                                               
+#> ot2         -0.198  0.146 -0.148                                                        
+#> ot3         -0.271  0.200 -0.404  0.340                                                 
+#> EVT_GSV_z    0.310 -0.417  0.153 -0.061 -0.083                                          
+#> GrpNrmlHr:1 -0.363  0.492 -0.740  0.109  0.299 -0.206                                   
+#> GrpNrmlHr:2  0.146 -0.197  0.109 -0.741 -0.252  0.081 -0.145                            
+#> GrpNrmlHr:3  0.201 -0.272  0.300 -0.252 -0.741  0.113 -0.406  0.343                     
+#> o1:EVT_GSV_  0.153 -0.206  0.312 -0.043 -0.125  0.491 -0.420  0.058  0.168              
+#> o2:EVT_GSV_ -0.061  0.082 -0.043  0.314  0.111 -0.199  0.058 -0.422 -0.147 -0.150       
+#> o3:EVT_GSV_ -0.085  0.114 -0.127  0.111  0.313 -0.273  0.170 -0.147 -0.423 -0.411  0.338
 
 m_rw_3b <- glmer(
   cbind(Target, Distractor) ~ 
-    Group * (1 + ot1 + ot2 + ot3) + 
-    Group * EVT_GSV_z * (1 + ot1) + 
+    Group * EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
@@ -632,59 +680,70 @@ m_rw_3b <- glmer(
 summary(m_rw_3b)
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: binomial  ( logit )
-#> Formula: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + Group *  
-#>     EVT_GSV_z * (1 + ot1) + (ot1 + ot2 + ot3 | ChildStudyID)
+#> Formula: cbind(Target, Distractor) ~ Group * EVT_GSV_z * (1 + ot1 + ot2 +  
+#>     ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
 #>    Data: d_rw %>% anti_join(no_vocab_pairs)
 #> Control: glmer_controls
 #> 
 #>      AIC      BIC   logLik deviance df.resid 
-#>  11229.7  11355.4  -5592.9  11185.7     2210 
+#>  11229.8  11378.3  -5588.9  11177.8     2206 
 #> 
 #> Scaled residuals: 
-#>     Min      1Q  Median      3Q     Max 
-#> -3.1797 -0.4221  0.0001  0.4466  2.4464 
+#>      Min       1Q   Median       3Q      Max 
+#> -3.14537 -0.42363  0.00127  0.44243  2.44166 
 #> 
 #> Random effects:
 #>  Groups       Name        Variance Std.Dev. Corr             
-#>  ChildStudyID (Intercept) 0.4890   0.6993                    
-#>               ot1         4.4087   2.0997    0.47            
-#>               ot2         1.8324   1.3537   -0.24 -0.19      
-#>               ot3         0.6827   0.8263   -0.26 -0.42  0.35
+#>  ChildStudyID (Intercept) 0.4898   0.6998                    
+#>               ot1         4.4008   2.0978    0.47            
+#>               ot2         1.7476   1.3220   -0.24 -0.20      
+#>               ot3         0.6570   0.8105   -0.27 -0.43  0.39
 #> Number of obs: 2232, groups:  ChildStudyID, 72
 #> 
 #> Fixed effects:
 #>                                  Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)                       0.83695    0.12435   6.731 1.69e-11 ***
-#> GroupNormalHearing                0.40150    0.18974   2.116  0.03434 *  
-#> ot1                               2.70163    0.37691   7.168 7.62e-13 ***
-#> ot2                              -0.77608    0.23440  -3.311  0.00093 ***
-#> ot3                              -0.12135    0.15045  -0.807  0.41989    
-#> EVT_GSV_z                         0.24487    0.09917   2.469  0.01354 *  
-#> GroupNormalHearing:ot1            0.19081    0.57202   0.334  0.73870    
-#> GroupNormalHearing:ot2           -0.53549    0.33092  -1.618  0.10563    
-#> GroupNormalHearing:ot3            0.14341    0.21184   0.677  0.49842    
-#> GroupNormalHearing:EVT_GSV_z     -0.36995    0.22076  -1.676  0.09378 .  
-#> ot1:EVT_GSV_z                     0.53620    0.28952   1.852  0.06402 .  
-#> GroupNormalHearing:ot1:EVT_GSV_z -1.13001    0.64393  -1.755  0.07928 .  
+#> (Intercept)                       0.84577    0.12493   6.770 1.29e-11 ***
+#> GroupNormalHearing                0.39437    0.18976   2.078 0.037687 *  
+#> EVT_GSV_z                         0.26639    0.10278   2.592 0.009546 ** 
+#> ot1                               2.72474    0.37928   7.184 6.77e-13 ***
+#> ot2                              -0.85015    0.24477  -3.473 0.000514 ***
+#> ot3                              -0.14386    0.15799  -0.911 0.362527    
+#> GroupNormalHearing:EVT_GSV_z     -0.39406    0.22210  -1.774 0.076026 .  
+#> GroupNormalHearing:ot1            0.28480    0.57711   0.493 0.621664    
+#> GroupNormalHearing:ot2           -0.20813    0.37205  -0.559 0.575889    
+#> GroupNormalHearing:ot3            0.01236    0.23981   0.052 0.958903    
+#> EVT_GSV_z:ot1                     0.59507    0.31120   1.912 0.055858 .  
+#> EVT_GSV_z:ot2                    -0.17237    0.19999  -0.862 0.388754    
+#> EVT_GSV_z:ot3                    -0.05080    0.12810  -0.397 0.691673    
+#> GroupNormalHearing:EVT_GSV_z:ot1 -1.46614    0.67440  -2.174 0.029705 *  
+#> GroupNormalHearing:EVT_GSV_z:ot2 -0.43681    0.43398  -1.007 0.314162    
+#> GroupNormalHearing:EVT_GSV_z:ot3  0.41554    0.27846   1.492 0.135633    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> 
-#> Correlation of Fixed Effects:
-#>             (Intr) GrpNrH ot1    ot2    ot3    EVT_GS GrNH:1 GrNH:2 GrNH:3 GNH:EV o1:EVT
-#> GrpNrmlHrng -0.657                                                                      
-#> ot1          0.459 -0.302                                                               
-#> ot2         -0.209  0.138 -0.160                                                        
-#> ot3         -0.220  0.146 -0.353  0.329                                                 
-#> EVT_GSV_z    0.335 -0.226  0.138  0.007  0.007                                          
-#> GrpNrmlHr:1 -0.302  0.452 -0.660  0.105  0.237 -0.090                                   
-#> GrpNrmlHr:2  0.150 -0.196  0.115 -0.707 -0.231 -0.001 -0.148                            
-#> GrpNrmlHr:3  0.157 -0.204  0.252 -0.232 -0.707 -0.002 -0.334  0.332                     
-#> GNH:EVT_GSV -0.146 -0.290 -0.058 -0.004 -0.006 -0.437 -0.116  0.000 -0.005              
-#> o1:EVT_GSV_  0.141 -0.094  0.328  0.013  0.009  0.414 -0.219 -0.007 -0.004 -0.182       
-#> GNH:1:EVT_G -0.062 -0.119 -0.144 -0.004 -0.012 -0.184 -0.282 -0.003 -0.001  0.412 -0.440
 ```
 
 <img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2.png" width="80%" />
+
+``` r
+do.call(anova, unname(models))
+#> Data: d_rw %>% anti_join(no_vocab_pairs)
+#> Models:
+#> MODEL1: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + (ot1 + 
+#> MODEL1:     ot2 + ot3 | ChildStudyID)
+#> MODEL2: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
+#> MODEL2:     ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL3: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + EVT_GSV_z * 
+#> MODEL3:     (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL4: cbind(Target, Distractor) ~ Group * EVT_GSV_z * (1 + ot1 + ot2 + 
+#> MODEL4:     ot3) + (ot1 + ot2 + ot3 | ChildStudyID)
+#>        Df   AIC   BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)    
+#> MODEL1 18 11230 11332 -5596.7    11194                             
+#> MODEL2 18 11228 11330 -5595.8    11192 1.9524      0    < 2e-16 ***
+#> MODEL3 22 11231 11356 -5593.4    11187 4.6992      4    0.31957    
+#> MODEL4 26 11230 11378 -5588.9    11178 9.0176      4    0.06066 .  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
 
 ### Nonword models
 
@@ -910,73 +969,28 @@ summary(m_ns_3b)
 
 <img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" />
 
+``` r
+do.call(anova, unname(models))
+#> Data: d_ns %>% anti_join(no_vocab_pairs)
+#> Models:
+#> MODEL1: cbind(Target, Distractor) ~ Group * (1 + ot1) + ot2 + ot3 + (ot1 + 
+#> MODEL1:     ot2 + ot3 | ChildStudyID)
+#> MODEL2: cbind(Target, Distractor) ~ EVT_GSV_z * (1 + ot1) + ot2 + ot3 + 
+#> MODEL2:     (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL3: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + EVT_GSV_z * 
+#> MODEL3:     (1 + ot1) + (ot1 + ot2 + ot3 | ChildStudyID)
+#> MODEL4: cbind(Target, Distractor) ~ Group * (1 + ot1 + ot2 + ot3) + Group * 
+#> MODEL4:     EVT_GSV_z * (1 + ot1) + (ot1 + ot2 + ot3 | ChildStudyID)
+#>        Df   AIC   BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)    
+#> MODEL1 16 11234 11326 -5601.1    11202                             
+#> MODEL2 16 11227 11319 -5597.7    11195 6.9087      0     <2e-16 ***
+#> MODEL3 20 11229 11344 -5594.6    11189 6.0965      4     0.1921    
+#> MODEL4 22 11231 11357 -5593.6    11187 1.9973      2     0.3684    
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
 ------------------------------------------------------------------------
-
-``` r
-evt_lmh <- d_ns %>% 
-  group_by(Group, Group_Lab) %>% 
-  tidy_quantile(EVT_GSV_z)
-
-data_grid1 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_1a, ., type = "response", re.form = ~ 0))
-
-data_grid2 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_2a, ., type = "response", re.form = ~ 0))
-
-data_grid3 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_3a, ., type = "response", re.form = ~ 0))
-
-fits <- bind_rows(
-  data_grid1 %>% mutate(Model = "Group"),
-  data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group x Vocab.")) %>% 
-  mutate(Model = factor(Model, c("Group", "Vocab.", "Group x Vocab.")))
-
-ggplot(fits) +
-  aes(x = Time, y = fitted, color = Group) + 
-  hline_chance() +
-  geom_line(
-    aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
-  facet_wrap("Model", labeller = label_both) + 
-    labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
-       x = plot_text$x_time,
-       y = plot_text$y_fits) + 
-  legend_top() + 
-  align_axis_right() + 
-  expand_limits(y = c(.15, .5))
-```
-
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png" width="80%" />
-
-``` r
-  
-
-ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
-  aes(x = Time, y = Prop) + 
-  hline_chance() +
-  geom_line(
-    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
-    data = data_grid3) + 
-  facet_wrap("Group_Lab") + 
-  labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
-       x = plot_text$x_time,
-       y = plot_text$y_fits) + 
-  legend_top() + 
-  align_axis_right() + 
-  expand_limits(y = c(.15, .5)) + 
-  ggtitle("Vocabulary effects in nonword condition")
-```
-
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-2.png" width="80%" />
 
 ``` r
 d_ns %>% 
@@ -992,4 +1006,4 @@ d_ns %>%
     align_axis_right()
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png" width="80%" />
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-8-1.png" width="80%" />

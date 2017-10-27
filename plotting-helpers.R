@@ -153,3 +153,35 @@ tidy_quantile.grouped_df <- function(df, var, probs = seq(.1, .9, .2)) {
     select(-`....id`)
 }
 
+
+
+## Prediction helpers
+predict_fixef <- function(...) {
+  predict(..., re.form = ~ 0)
+}
+
+predict_fixef_resp <- function(...) {
+  predict_fixef(..., type = "response")
+}
+
+predict_fixef_link <- function(...) {
+  predict_fixef(..., type = "link")
+}
+
+# Create a set of predictions for a list of models
+map_predict <- function(data, models, f_predict, col_to_add = "fitted") {
+  # if user didn't give a list of models, make one
+  what_user_entered <- enexpr(models)
+  if (!is_list(models)) {
+    model_name <- expr_name(what_user_entered)
+    models <- set_names(list(models), model_name)
+  }
+
+  fits <- lapply(models, function(model) {
+    fitted <- list(f_predict(model, newdata = data))
+    column <- set_names(fitted, col_to_add)
+    tibble::add_column(data, !!! column)
+  })
+  bind_rows(fits, .id = "model")
+}
+

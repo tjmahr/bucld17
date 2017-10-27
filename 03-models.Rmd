@@ -1,5 +1,5 @@
 ---
-title: "Plot the eyetracking data"
+title: "Growth curve models"
 author: "Tristan Mahr"
 date: "`r Sys.Date()`"
 output: 
@@ -20,7 +20,6 @@ opts_chunk$set(
   dpi = 300,
   out.width = "80%")
 options(width = 100)
-
 ```
 
 ## Set up
@@ -48,19 +47,9 @@ looks <- looks %>%
 
 ### Prep the datasets
 
-```{r}
-d_mp <- looks %>% 
-  filter(Condition == "MP")
-
-d_rw <- looks %>% 
-  filter(Condition == "real")
-
-d_ns <- looks %>% 
-  filter(Condition == "nonsense")
-```
-
-We need to remove any pairs of children in which one of the children is missing
-an EVT score.
+For the models with vocabulary information, we need to remove any pairs of
+children in which one of the children is missing an EVT score. We identify those 
+pairs.
 
 ```{r}
 no_vocab_pairs <- looks %>%
@@ -70,12 +59,36 @@ no_vocab_pairs <- looks %>%
   print()
 ```
 
+Prepare a dataset for each condition.
 
-## Fit the models
+```{r}
+d_mp <- looks %>% 
+  filter(Condition == "MP")
 
-### EVT-less models
+d_rw <- looks %>% 
+  filter(Condition == "real")
 
-```{r ns-models, cache = TRUE}
+d_ns <- looks %>% 
+  filter(Condition == "nonsense")
+
+d_mp_evt <- d_mp %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_rw_evt <- d_rw %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_ns_evt <- d_ns %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+```
+
+
+
+
+## Fit the vocabulary-less models
+
+First, we just look at the group effects on the growth curve shapes.
+
+```{r no-evt-models, cache = TRUE}
 glmer_controls <- glmerControl(
   optimizer = "bobyqa",
   optCtrl = list(maxfun = 2e5))
@@ -105,6 +118,70 @@ m_ns <- glmer(
 summary(m_ns)
 ```
 
+We can plot the growth curve fixed effects which describe how the average child
+in each group x condition performs.
+
+```{r overall-fits, echo = FALSE}
+d_times <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group)
+
+condition_labels <- looks %>% 
+  distinct(Condition, Cond_Lab, Group, Group_Lab)
+
+models <- list(
+  nonsense = m_ns,
+  MP = m_mp,
+  real = m_rw)
+
+fitted <- map_predict(d_times, models, predict_fixef_resp) %>% 
+  left_join(condition_labels, 
+            by = c("model" = "Condition", "Group"))
+
+ggplot(looks) +
+  aes(x = Time, color = Cond_Lab, group = interaction(Group_Lab, Cond_Lab)) + 
+  hline_chance() +
+  stat_mean_se(mapping = aes(y = Prop), alpha = .4) + 
+  geom_line(aes(y = fitted, linetype = Group_Lab, 
+                group = interaction(Group_Lab, Cond_Lab)), data = fitted, 
+            size = 1) +
+  viridis::scale_color_viridis(discrete = TRUE, option = "viridis", end = .8) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Child hears",
+       linetype = "Group") + 
+  legend_top() + 
+  align_axis_right()
+
+ggplot(fitted) + 
+  aes(x = Time, y = fitted, linetype = Group_Lab, color = Cond_Lab) + 
+  hline_chance() +
+  geom_line(size = 1) +
+  labs(x = plot_text$x_time, y = plot_text$y_fits,
+       color = "Child hears", linetype = "Group") + 
+  legend_top() + 
+  align_axis_right() + 
+  viridis::scale_color_viridis(discrete = TRUE, option = "viridis", end = .8)
+
+# logit_fits <- map_predict(d_times, models, predict_fixef_link) %>% 
+#   left_join(condition_labels, 
+#             by = c("model" = "Condition", "Group"))
+# 
+# ggplot(logit_fits) + 
+#   aes(x = Time, y = fitted, linetype = Group_Lab, color = Cond_Lab) + 
+#   hline_chance() +
+#   geom_line(size = 1) +
+#   labs(x = plot_text$x_time, y = plot_text$y_fits,
+#        color = "Child hears", linetype = "Group") + 
+#   legend_top() + 
+#   align_axis_right()
+```
+
+
+
+
+## Fit the models that include vocabulary isze
+
 
 ### Mispronunciations
 
@@ -122,7 +199,7 @@ m_mp_1a <- glmer(
     Group * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_1a)
 
 m_mp_2a <- glmer(
@@ -130,7 +207,7 @@ m_mp_2a <- glmer(
     EVT_GSV_z * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_2a)
 
 m_mp_3a <- glmer(
@@ -140,7 +217,7 @@ m_mp_3a <- glmer(
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_3a)
 
 m_mp_3b <- glmer(
@@ -149,75 +226,60 @@ m_mp_3b <- glmer(
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
+  data = d_mp_evt)
 summary(m_mp_3b)
 ```
 
 
 
 ```{r mp-plots, fig.width = 6, echo = FALSE}
-models <- list(
-  group = m_mp_1a, 
-  vocab = m_mp_2a, 
-  group_vocab = m_mp_3a, 
-  group_x_vocab = m_mp_3b)
+scale_plasma <- viridis::scale_color_viridis(
+  discrete = TRUE, 
+  option = "plasma", 
+  end = .7)
 
-evt_lmh <- d_ns %>% 
+models <- list(
+  Group = m_mp_1a, 
+  `Vocab.` = m_mp_2a, 
+  `Group + Vocab.` = m_mp_3a, 
+  `Group x Vocab.` = m_mp_3b)
+
+d_times <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group)
+
+evt_lmh <- d_mp_evt %>% 
+  distinct(Group, Group_Lab, EVT_GSV_z) %>% 
   group_by(Group, Group_Lab) %>% 
   tidy_quantile(EVT_GSV_z)
 
-data_grid1 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group, ., type = "response", re.form = ~ 0))
-
-data_grid2 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$vocab, ., type = "response", re.form = ~ 0))
-
-data_grid3 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
-
-data_grid4 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
-
-fits <- bind_rows(
-  data_grid1 %>% mutate(Model = "Group"),
-  data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group + Vocab."), 
-  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+fits <- d_times %>% 
+  inner_join(evt_lmh, by = "Group") %>% 
+  map_predict(models, predict_fixef_resp) %>% 
+  rename(Model = model) %>% 
   mutate(Model = factor(Model, c("Group", "Vocab.", 
                                  "Group + Vocab.", "Group x Vocab.")))
 
 ggplot(fits) +
-  aes(x = Time, y = fitted, color = Group) + 
+  aes(x = Time, y = fitted, color = Group_Lab) + 
   hline_chance() +
   geom_line(
     aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
+  scale_plasma +
   facet_wrap("Model", labeller = label_both) + 
-    labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
-       x = plot_text$x_time,
-       y = plot_text$y_fits) + 
+  labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
+     x = plot_text$x_time,
+     y = plot_text$y_fits,
+     color = "Group") + 
   legend_top() + 
   align_axis_right() +
   expand_limits(y = c(.25, .75))
   
-
-ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
-  aes(x = Time, y = Prop) + 
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted) + 
   hline_chance() +
   geom_line(
     aes(x = Time, y = fitted, group = interaction(Group, quantile)),
-    data = data_grid3) + 
+    size = 1) + 
   facet_wrap("Group_Lab") + 
   labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
        x = plot_text$x_time,
@@ -228,11 +290,21 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   expand_limits(y = c(.25, .75))
 ```
 
+Model comparison here should be taken with a grain of salt because we are adding
+predictors in batches of four coefficients (the predictor's main effect and
+interactions with time). AIC and BIC penalize fit measures based on number of
+parameters, so we are adding big penalities with each additional predictor.
+Consider this more of coarse look at how batches of coefficients improve model
+fit.
+
+```{r}
+do.call(anova, unname(models))
+```
 
 
 ### Real words
 
-Only allow EVT to interact with time^1^.
+Allow EVT to interact with time^1^, time^2^ and time^3^.
 
 ```{r rw-evt-models, cache = TRUE, eval = TRUE}
 m_rw_1a <- glmer(
@@ -245,7 +317,7 @@ summary(m_rw_1a)
 
 m_rw_2a <- glmer(
   cbind(Target, Distractor) ~ 
-    EVT_GSV_z * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+   EVT_GSV_z * (1 + ot1 + ot2 + ot3) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
   data = d_rw %>% anti_join(no_vocab_pairs))
@@ -254,7 +326,7 @@ summary(m_rw_2a)
 m_rw_3a <- glmer(
   cbind(Target, Distractor) ~ 
     Group * (1 + ot1 + ot2 + ot3) + 
-    EVT_GSV_z * (1 + ot1) + 
+    EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
@@ -263,8 +335,7 @@ summary(m_rw_3a)
 
 m_rw_3b <- glmer(
   cbind(Target, Distractor) ~ 
-    Group * (1 + ot1 + ot2 + ot3) + 
-    Group * EVT_GSV_z * (1 + ot1) + 
+    Group * EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
     (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
@@ -273,68 +344,43 @@ summary(m_rw_3b)
 ```
 
 
+
+
 ```{r rw-plots, fig.width = 6, echo = FALSE}
 models <- list(
-  group = m_rw_1a, 
-  vocab = m_rw_2a, 
-  group_vocab = m_rw_3a, 
-  group_x_vocab = m_rw_3b)
+  Group = m_rw_1a, 
+  `Vocab.` = m_rw_2a, 
+  `Group + Vocab.` = m_rw_3a, 
+  `Group x Vocab.` = m_rw_3b)
 
-evt_lmh <- d_ns %>% 
-  group_by(Group, Group_Lab) %>% 
-  tidy_quantile(EVT_GSV_z)
-
-data_grid1 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group, ., type = "response", re.form = ~ 0))
-
-data_grid2 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$vocab, ., type = "response", re.form = ~ 0))
-
-data_grid3 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
-
-data_grid4 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
-
-fits <- bind_rows(
-  data_grid1 %>% mutate(Model = "Group"),
-  data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group + Vocab."), 
-  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+fits <- d_times %>% 
+  inner_join(evt_lmh, by = "Group") %>% 
+  map_predict(models, predict_fixef_resp) %>% 
+  rename(Model = model) %>% 
   mutate(Model = factor(Model, c("Group", "Vocab.", 
                                  "Group + Vocab.", "Group x Vocab.")))
 
 ggplot(fits) +
-  aes(x = Time, y = fitted, color = Group) + 
+  aes(x = Time, y = fitted, color = Group_Lab) + 
   hline_chance() +
   geom_line(
     aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
+  scale_plasma + 
   facet_wrap("Model", labeller = label_both) + 
     labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
        x = plot_text$x_time,
-       y = plot_text$y_fits) + 
+       y = plot_text$y_fits,
+       color = "Group") + 
   legend_top() + 
-  align_axis_right() 
+  align_axis_right() +
+  expand_limits(y = c(.25, .75))
   
-
-ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
-  aes(x = Time, y = Prop) + 
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted) + 
   hline_chance() +
   geom_line(
     aes(x = Time, y = fitted, group = interaction(Group, quantile)),
-    data = data_grid3) + 
+    size = 1) + 
   facet_wrap("Group_Lab") + 
   labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
        x = plot_text$x_time,
@@ -344,6 +390,9 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   ggtitle("Vocabulary effects in correct production condition")
 ```
 
+```{r}
+do.call(anova, unname(models))
+```
 
 
 ### Nonword models
@@ -390,66 +439,38 @@ summary(m_ns_3b)
 
 ```{r ns-plots, fig.width = 6, echo = FALSE}
 models <- list(
-  group = m_ns_1a, 
-  vocab = m_ns_2a, 
-  group_vocab = m_ns_3a, 
-  group_x_vocab = m_ns_3b)
+  Group = m_ns_1a, 
+  `Vocab.` = m_ns_2a, 
+  `Group + Vocab.` = m_ns_3a, 
+  `Group x Vocab.` = m_ns_3b)
 
-evt_lmh <- d_ns %>% 
-  group_by(Group, Group_Lab) %>% 
-  tidy_quantile(EVT_GSV_z)
-
-data_grid1 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group, ., type = "response", re.form = ~ 0))
-
-data_grid2 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$vocab, ., type = "response", re.form = ~ 0))
-
-data_grid3 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
-
-data_grid4 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
-
-fits <- bind_rows(
-  data_grid1 %>% mutate(Model = "Group"),
-  data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group + Vocab."), 
-  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+fits <- d_times %>% 
+  inner_join(evt_lmh, by = "Group") %>% 
+  map_predict(models, predict_fixef_resp) %>% 
+  rename(Model = model) %>% 
   mutate(Model = factor(Model, c("Group", "Vocab.", 
                                  "Group + Vocab.", "Group x Vocab.")))
-
 ggplot(fits) +
-  aes(x = Time, y = fitted, color = Group) + 
+  aes(x = Time, y = fitted, color = Group_Lab) + 
   hline_chance() +
   geom_line(
     aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
+  scale_plasma + 
   facet_wrap("Model", labeller = label_both) + 
     labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
        x = plot_text$x_time,
-       y = plot_text$y_fits) + 
+       y = plot_text$y_fits,
+       color = "Group") + 
   legend_top() + 
-  align_axis_right() 
+  align_axis_right() +
+  expand_limits(y = c(.25, .75))
   
-
-ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
-  aes(x = Time, y = Prop) + 
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted) + 
   hline_chance() +
   geom_line(
-    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
-    data = data_grid3) + 
+    aes(x = Time, y = fitted, group = interaction(Group_Lab, quantile)),
+    size = 1) + 
   facet_wrap("Group_Lab") + 
   labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
        x = plot_text$x_time,
@@ -458,71 +479,14 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   align_axis_right() + 
   ggtitle("Vocabulary effects in nonword condition")
 ```
+
+
+```{r}
+do.call(anova, unname(models))
+```
+
 
 ***
-
-
-
-```{r, fig.width = 6}
-evt_lmh <- d_ns %>% 
-  group_by(Group, Group_Lab) %>% 
-  tidy_quantile(EVT_GSV_z)
-
-data_grid1 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_1a, ., type = "response", re.form = ~ 0))
-
-data_grid2 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_2a, ., type = "response", re.form = ~ 0))
-
-data_grid3 <- d_ns %>% 
-  distinct(Time, ot1, ot2, ot3, Group) %>% 
-  inner_join(evt_lmh) %>% 
-  mutate(
-    fitted = predict(m_ns_3a, ., type = "response", re.form = ~ 0))
-
-fits <- bind_rows(
-  data_grid1 %>% mutate(Model = "Group"),
-  data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group x Vocab.")) %>% 
-  mutate(Model = factor(Model, c("Group", "Vocab.", "Group x Vocab.")))
-
-ggplot(fits) +
-  aes(x = Time, y = fitted, color = Group) + 
-  hline_chance() +
-  geom_line(
-    aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
-  facet_wrap("Model", labeller = label_both) + 
-    labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
-       x = plot_text$x_time,
-       y = plot_text$y_fits) + 
-  legend_top() + 
-  align_axis_right() + 
-  expand_limits(y = c(.15, .5))
-  
-
-ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
-  aes(x = Time, y = Prop) + 
-  hline_chance() +
-  geom_line(
-    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
-    data = data_grid3) + 
-  facet_wrap("Group_Lab") + 
-  labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
-       x = plot_text$x_time,
-       y = plot_text$y_fits) + 
-  legend_top() + 
-  align_axis_right() + 
-  expand_limits(y = c(.15, .5)) + 
-  ggtitle("Vocabulary effects in nonword condition")
-
-```
-
 
 
 ```{r, fig.width = 5}

@@ -1,0 +1,205 @@
+---
+title: "Consider the first image viewed"
+author: "Tristan Mahr"
+date: "`r Sys.Date()`"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+opts_chunk$set(
+  warning = FALSE,
+  collapse = TRUE, 
+  comment = "#>", 
+  message = FALSE,
+  fig.width = 8,
+  fig.asp = 0.618,
+  dpi = 300,
+  out.width = "80%")
+options(width = 100)
+```
+
+## Set up
+
+```{r, results = 'hide'}
+library(dplyr)
+library(littlelisteners)
+library(ggplot2)
+library(lme4)
+
+source("./plotting-helpers.R", encoding = "UTF8")
+looks <- readr::read_csv("./data/bias.csv.gz") %>% 
+  mutate(
+    Cond_Lab = Condition %>% 
+      factor(c("real", "MP", "nonsense"),
+             c("Real word", "Mispronunciation", "Nonword")))
+```
+
+### Add orthogonal polynomials
+
+```{r}
+looks <- looks %>% 
+  polypoly::poly_add_columns(Time, degree = 3, prefix = "ot") 
+```
+
+### Prep the datasets
+
+For the models with vocabulary information, we need to remove any pairs of
+children in which one of the children is missing an EVT score. We identify those 
+pairs.
+
+```{r}
+no_vocab_pairs <- looks %>%
+  distinct(ChildStudyID, Matching_PairNumber, EVT_Standard) %>%
+  filter(is.na(EVT_Standard)) %>%
+  select(Matching_PairNumber) %>%
+  print()
+```
+
+Prepare a dataset for each condition.
+
+```{r}
+d_mp <- looks %>% 
+  filter(Condition == "MP")
+
+d_rw <- looks %>% 
+  filter(Condition == "real")
+
+d_ns <- looks %>% 
+  filter(Condition == "nonsense")
+
+d_mp_evt <- d_mp %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_rw_evt <- d_rw %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+
+d_ns_evt <- d_ns %>% 
+  anti_join(no_vocab_pairs, by = "Matching_PairNumber")
+```
+
+## Group by initial image models
+
+For these models we include an indicator for whether the child fixated on the
+familiar or novel object during target noun onset. This predictor doubled the
+number of (growth curve shape) parameters in our model and cuts the number of
+observations in cell by more than half. (More than half because in some trials
+the fixated at neither the familiar or novel object, so those trials have to be
+excluded.) So take these with a grain of salt.
+
+```{r no-evt-models, cache = TRUE}
+glmer_controls <- glmerControl(
+  optimizer = "bobyqa",
+  optCtrl = list(maxfun = 2e5))
+
+m_mp <- glmer(
+  cbind(Target, Distractor) ~ 
+    Bias_ImageAOI * Group * (ot1 + ot2 + ot3) + 
+    (ot1 + ot2 + ot3 | ChildStudyID:Bias_ImageAOI),
+  family = binomial,
+  control = glmer_controls,
+  data = d_mp)
+summary(m_mp)
+
+m_rw <- glmer(
+  cbind(Target, Distractor) ~ 
+    Bias_ImageAOI * Group * (ot1 + ot2 + ot3) + 
+    (ot1 + ot2 + ot3 | ChildStudyID:Bias_ImageAOI),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw)
+summary(m_rw)
+
+m_ns <- glmer(
+  cbind(Target, Distractor) ~ 
+    Bias_ImageAOI * Group * (ot1 + ot2 + ot3) + 
+    (ot1 + ot2 + ot3 | ChildStudyID:Bias_ImageAOI),
+  family = binomial,
+  control = glmer_controls,
+  data = d_ns)
+summary(m_ns)
+```
+
+
+We can plot the growth curve fixed effects which describe how the average child
+in each group x condition x initial-look performs.
+
+```{r overall-fits, echo = FALSE}
+scale_plasma <- viridis::scale_color_viridis(
+  discrete = TRUE, 
+  option = "plasma", 
+  end = .7)
+
+d_times <- d_ns %>% 
+  distinct(Bias_ImageAOI, Time, ot1, ot2, ot3, Group) %>% 
+  filter(!is.na(Bias_ImageAOI)) %>% 
+  mutate(`First Look` = ifelse(Bias_ImageAOI == "Target", 
+                               "Familiar object", "Novel object"))
+
+condition_labels <- looks %>% 
+  distinct(Condition, Cond_Lab, Group, Group_Lab)
+
+models <- list(
+  nonsense = m_ns,
+  MP = m_mp,
+  real = m_rw)
+
+fitted <- map_predict(d_times, models, predict_fixef_resp) %>% 
+  left_join(condition_labels, 
+            by = c("model" = "Condition", "Group"))
+
+only_bias_looks <- looks %>% 
+  filter(!is.na(Bias_ImageAOI)) %>% 
+  mutate(`First Look` = ifelse(Bias_ImageAOI == "Target", 
+                               "Familiar object", "Novel object"))
+
+ggplot(only_bias_looks) +
+  theme_grey(base_size = 14) +
+  aes(x = Time, color = Group_Lab, group = interaction(Group_Lab, Cond_Lab)) + 
+  hline_chance() +
+  stat_mean_se(mapping = aes(y = Prop), alpha = .4, shape = 1) + 
+  geom_line(aes(y = fitted, linetype = Group_Lab, 
+                group = interaction(Group_Lab, Cond_Lab)), data = fitted, 
+            size = 1) +
+  scale_plasma +  
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Group",
+       linetype = "Group") + 
+  legend_top() + 
+  align_axis_right() + 
+  facet_grid(`First Look` ~ Cond_Lab) + 
+  ggtitle("Looks by image viewed during word onset")
+
+for (x in unique(only_bias_looks$Cond_Lab)) {
+  this_looks <- only_bias_looks %>% filter(Cond_Lab == x)
+  this_fitted <- fitted %>% filter(Cond_Lab == x)
+  p <- ggplot(this_looks) +
+    theme_grey(base_size = 14) +
+    aes(x = Time, color = Group_Lab, group = interaction(Group_Lab, Cond_Lab)) + 
+    hline_chance() +
+    stat_mean_se(mapping = aes(y = Prop), alpha = .4, shape = 1) + 
+    geom_line(aes(y = fitted, linetype = Group_Lab,
+                  group = interaction(Group_Lab, Cond_Lab)), data = this_fitted, 
+              size = 1) +
+    scale_plasma +  
+    guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+    labs(x = plot_text$x_time,
+         y = plot_text$y_fits,
+         color = "Group",
+         linetype = "Group",
+         caption = paste0("Condition: ", x)) + 
+    legend_top() + 
+    align_axis_right() + 
+    facet_grid(. ~ `First Look`, labeller = label_both) 
+    expand_limits(y = 0:1)
+  print(p)
+}
+```
+
+
+

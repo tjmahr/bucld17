@@ -154,6 +154,218 @@ ggplot(binned) +
   legend_top()
 ```
 
+```{r}
+after_onset <- binned %>% filter(0 <= Time) 
+
+after_onset %>% 
+  filter(Group == "NormalHearing") %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition == "real")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition == "real")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "nonsense"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("real", "nonsense", "MP")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "nonsense"))) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se() + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+
+
+
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("nonsense")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("nonsense"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% 
+                   filter(Condition %in% c("MP")) %>% 
+                   filter(Group == "NormalHearing")) + 
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("MP"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+```
+
+
 But given that the groups differ in vocabulary, we can see the same pattern of
 results, kind of, by binning children based on EVT scores.
 
@@ -200,6 +412,40 @@ binned %>%
     align_axis_right()
 ```
 
+### Get descriptives for slide
+
+```{r}
+scores %>% 
+  distinct(Group, ChildID, Female) %>% 
+  group_by(Group) %>% 
+  count(Female)
+
+scores %>% 
+  distinct(Group, ChildStudyID) %>% 
+  count(Group)
+
+scores %>% 
+  group_by(Group) %>% 
+  summarise(
+    Age = mean(EVT_Age) %>% round(),
+    Age_SD = sd(EVT_Age) %>% round(),
+    Min_Age = min(EVT_Age),
+    Max_Age = max(EVT_Age))
+
+scores %>% 
+  group_by(Group) %>% 
+  summarise(
+    EVT = mean(EVT_Standard, na.rm = TRUE) %>% round(),
+    EVT_SD = sd(EVT_Standard, na.rm = TRUE) %>% round(),
+    Min_EVT = min(EVT_Standard, na.rm = TRUE),
+    Max_EVT = max(EVT_Standard, na.rm = TRUE))
+
+scores %>% 
+  distinct(Group, ChildID, Maternal_Education) %>% 
+  count(Group, Maternal_Education)
+```
+
+
 
 ### Save the model-ready data
 
@@ -217,6 +463,21 @@ binned %>%
          GFTA_Standard, ends_with("_z")) %>% 
   filter(300 <= Time, Time <= 1800) %>% 
   readr::write_csv("./data/model.csv.gz")
+```
+
+```{r, include = FALSE}
+looks %>% 
+  aggregate_looks(def, Bias_ImageAOI + Group + Study + ResearchID + 
+                    Condition + BinTime ~ GazeByImageAOI) %>% 
+  rename(Time = BinTime) %>% 
+  left_join(look_labs) %>% 
+  inner_join(scores) %>% 
+  select(ChildStudyID, Matching_PairNumber, Bias_ImageAOI,
+         Group:Time, Cond_Lab, Group_Lab, Target, Distractor, Prop,
+         EVT_Age, EVT_GSV, EVT_Standard, PPVT_GSV, PPVT_Standard,
+         GFTA_Standard, ends_with("_z")) %>% 
+  filter(300 <= Time, Time <= 1800) %>% 
+  readr::write_csv("./data/bias.csv.gz")
 ```
 
 
