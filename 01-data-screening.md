@@ -1,7 +1,7 @@
 Data screening
 ================
 Tristan Mahr
-2017-10-23
+2017-10-26
 
 -   [Set up](#set-up)
 -   [Remove blocks from the bad version of the experiment](#remove-blocks-from-the-bad-version-of-the-experiment)
@@ -44,8 +44,8 @@ Set data-screening options.
 ``` r
 screening <- list(
   # determine amount of missing data between:
-  min_time = 300,
-  max_time = 1800,
+  min_time = 250,
+  max_time = 1500,
   # remove trials with more than ... proportion of missing data
   max_na = .5,
   # blocks should have at least this many trials
@@ -84,7 +84,7 @@ looks_good_version <- df_looks %>%
 Find unreliable trials
 ----------------------
 
-We identify trials with more than 50% missing data during a trial window (here 300-- 1800 ms).
+We identify trials with more than 50% missing data during a trial window (here 250-- 1500 ms).
 
 ``` r
 trial_quality <- looks_good_version %>% 
@@ -95,7 +95,7 @@ trial_quality <- looks_good_version %>%
   filter(between(Time, screening$min_time - 20, screening$max_time + 20)) 
 
 range(trial_quality$Time)
-#> [1]  283.128 1815.350
+#> [1]  233.164 1515.570
 
 missing_data_per_trial <- trial_quality %>% 
   aggregate_looks(def, Group + Study + ResearchID + 
@@ -103,18 +103,18 @@ missing_data_per_trial <- trial_quality %>%
   select(Group:TrialID, PropNA) %>% 
   print()
 #> # A tibble: 5,724 x 6
-#>              Group      Study ResearchID Matching_PairNumber TrialID    PropNA
-#>              <chr>      <chr>      <chr>               <int>   <int>     <dbl>
-#>  1 CochlearImplant CochlearV1       300E                   1  104349 0.2365591
-#>  2 CochlearImplant CochlearV1       300E                   1  104350 0.5376344
-#>  3 CochlearImplant CochlearV1       300E                   1  104351 0.2258065
-#>  4 CochlearImplant CochlearV1       300E                   1  104352 0.4301075
-#>  5 CochlearImplant CochlearV1       300E                   1  104353 0.1827957
-#>  6 CochlearImplant CochlearV1       300E                   1  104354 0.0000000
-#>  7 CochlearImplant CochlearV1       300E                   1  104355 0.1720430
-#>  8 CochlearImplant CochlearV1       300E                   1  104356 0.0000000
-#>  9 CochlearImplant CochlearV1       300E                   1  104357 0.0000000
-#> 10 CochlearImplant CochlearV1       300E                   1  104358 0.0000000
+#>              Group      Study ResearchID Matching_PairNumber TrialID     PropNA
+#>              <chr>      <chr>      <chr>               <int>   <int>      <dbl>
+#>  1 CochlearImplant CochlearV1       300E                   1  104349 0.06410256
+#>  2 CochlearImplant CochlearV1       300E                   1  104350 0.41025641
+#>  3 CochlearImplant CochlearV1       300E                   1  104351 0.26923077
+#>  4 CochlearImplant CochlearV1       300E                   1  104352 0.28205128
+#>  5 CochlearImplant CochlearV1       300E                   1  104353 0.10256410
+#>  6 CochlearImplant CochlearV1       300E                   1  104354 0.00000000
+#>  7 CochlearImplant CochlearV1       300E                   1  104355 0.24358974
+#>  8 CochlearImplant CochlearV1       300E                   1  104356 0.00000000
+#>  9 CochlearImplant CochlearV1       300E                   1  104357 0.00000000
+#> 10 CochlearImplant CochlearV1       300E                   1  104358 0.00000000
 #> # ... with 5,714 more rows
 ```
 
@@ -132,8 +132,8 @@ missing_data_per_trial %>%
 
 | PropNA &gt; 0.5 |  Num Trials|
 |:----------------|-----------:|
-| FALSE           |        4689|
-| TRUE            |        1035|
+| FALSE           |        4721|
+| TRUE            |        1003|
 
 ``` r
 
@@ -145,10 +145,10 @@ missing_data_per_trial %>%
 
 | Group           | PropNA &gt; 0.5 |  Num Trials|
 |:----------------|:----------------|-----------:|
-| CochlearImplant | FALSE           |        2118|
-| CochlearImplant | TRUE            |         654|
-| NormalHearing   | FALSE           |        2571|
-| NormalHearing   | TRUE            |         381|
+| CochlearImplant | FALSE           |        2131|
+| CochlearImplant | TRUE            |         641|
+| NormalHearing   | FALSE           |        2590|
+| NormalHearing   | TRUE            |         362|
 
 Remove the bad trials.
 
@@ -186,12 +186,12 @@ knitr::kable(blocks_to_drop)
 
 |  BlockID| Study      | ResearchID |  Num Trials in Block|
 |--------:|:-----------|:-----------|--------------------:|
-|     2454| TimePoint2 | 605L       |                    2|
 |     2804| TimePoint3 | 605L       |                    2|
-|     2877| TimePoint3 | 665L       |                    6|
-|     2803| TimePoint3 | 605L       |                    7|
-|     2532| TimePoint2 | 665L       |                    9|
-|     2182| TimePoint1 | 679L       |                   10|
+|     2454| TimePoint2 | 605L       |                    3|
+|     2877| TimePoint3 | 665L       |                    5|
+|     2803| TimePoint3 | 605L       |                    8|
+|     2182| TimePoint1 | 679L       |                   11|
+|     2532| TimePoint2 | 665L       |                   11|
 
 Remove the blocks.
 
@@ -222,16 +222,16 @@ condition_counts <- looks_clean_blocks %>%
 #> # A tibble: 234 x 4
 #>         Study ResearchID Condition `Num Trials in Condition`
 #>         <chr>      <chr>     <chr>                     <dbl>
-#>  1 TimePoint3       665L  nonsense                         6
-#>  2 TimePoint2       665L        MP                         7
-#>  3 TimePoint2       665L  nonsense                         8
-#>  4 TimePoint3       665L      real                         8
-#>  5 TimePoint2       665L      real                         9
-#>  6 TimePoint3       665L        MP                         9
-#>  7 CochlearV2       312E  nonsense                        10
+#>  1 TimePoint2       665L        MP                         6
+#>  2 TimePoint3       665L  nonsense                         6
+#>  3 CochlearV2       312E  nonsense                         8
+#>  4 TimePoint2       665L  nonsense                         8
+#>  5 TimePoint3       665L        MP                         8
+#>  6 TimePoint3       665L      real                         8
+#>  7 TimePoint2       679L  nonsense                         9
 #>  8 TimePoint1       679L      real                        10
-#>  9 TimePoint2       679L  nonsense                        10
-#> 10 CochlearV1       300E      real                        12
+#>  9 TimePoint2       665L      real                        10
+#> 10 CochlearV1       306E      real                        11
 #> # ... with 224 more rows
 ```
 
@@ -357,10 +357,10 @@ cleaning_progression %>%
 |:-------------------------------------|----------:|-------------:|--------------------:|-----------:|-----------:|
 | a. raw data                          |         41|            52|                   82|         163|        5868|
 | b. remove bad experiment version     |         41|            52|                   80|         159|        5724|
-| c. drop bad trials                   |         41|            52|                   80|         159|        4689|
-| d. drop sparse blocks                |         41|            51|                   78|         153|        4653|
-| e. drop children w sparse conditions |         41|            51|                   78|         153|        4653|
-| f. drop unpaired children            |         37|            50|                   74|         145|        4385|
+| c. drop bad trials                   |         41|            52|                   80|         159|        4703|
+| d. drop sparse blocks                |         41|            51|                   78|         153|        4663|
+| e. drop children w sparse conditions |         41|            51|                   78|         153|        4663|
+| f. drop unpaired children            |         37|            50|                   74|         145|        4394|
 
 ``` r
 
@@ -380,14 +380,14 @@ cleaning_progression %>%
 | a. raw data                          | NormalHearing   |            26|                   41|          82|        2952|
 | b. remove bad experiment version     | CochlearImplant |            26|                   39|          77|        2772|
 | b. remove bad experiment version     | NormalHearing   |            26|                   41|          82|        2952|
-| c. drop bad trials                   | CochlearImplant |            26|                   39|          77|        2118|
-| c. drop bad trials                   | NormalHearing   |            26|                   41|          82|        2571|
-| d. drop sparse blocks                | CochlearImplant |            25|                   37|          71|        2082|
-| d. drop sparse blocks                | NormalHearing   |            26|                   41|          82|        2571|
-| e. drop children w sparse conditions | CochlearImplant |            25|                   37|          71|        2082|
-| e. drop children w sparse conditions | NormalHearing   |            26|                   41|          82|        2571|
-| f. drop unpaired children            | CochlearImplant |            25|                   37|          71|        2082|
-| f. drop unpaired children            | NormalHearing   |            25|                   37|          74|        2303|
+| c. drop bad trials                   | CochlearImplant |            26|                   39|          77|        2121|
+| c. drop bad trials                   | NormalHearing   |            26|                   41|          82|        2582|
+| d. drop sparse blocks                | CochlearImplant |            25|                   37|          71|        2081|
+| d. drop sparse blocks                | NormalHearing   |            26|                   41|          82|        2582|
+| e. drop children w sparse conditions | CochlearImplant |            25|                   37|          71|        2081|
+| e. drop children w sparse conditions | NormalHearing   |            26|                   41|          82|        2582|
+| f. drop unpaired children            | CochlearImplant |            25|                   37|          71|        2081|
+| f. drop unpaired children            | NormalHearing   |            25|                   37|          74|        2313|
 
 Clean up
 --------
@@ -417,7 +417,11 @@ Save clean data.
 
 ``` r
 df_looks_w_info %>% 
-  readr::write_csv(file.path(".", "data", "screened.csv.gz"))
+  mutate(
+     Group_Lab = Group %>% 
+      factor(c("CochlearImplant", "NormalHearing"), 
+             c("Cochlear implant", "Normal hearing"))) %>% 
+  readr::write_csv("./data/screened.csv.gz")
 ```
 
 Update participants data to only have children with eyetracking data.
@@ -425,5 +429,9 @@ Update participants data to only have children with eyetracking data.
 ``` r
 readr::read_csv(file.path(".", "data-raw", "test-scores.csv")) %>% 
   semi_join(df_looks_w_info) %>% 
-  readr::write_csv(file.path(".", "data", "scores.csv"))
+  mutate(
+    Group_Lab = Group %>% 
+      factor(c("CochlearImplant", "NormalHearing"), 
+             c("Cochlear implant", "Normal hearing"))) %>%
+  readr::write_csv("./data/scores.csv")
 ```

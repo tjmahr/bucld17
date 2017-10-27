@@ -1,0 +1,233 @@
+Plot the eyetracking data
+================
+Tristan Mahr
+2017-10-26
+
+-   [Set up](#set-up)
+-   [Visualize differences in standardized test results](#visualize-differences-in-standardized-test-results)
+-   [Visualize the eyetracking data](#visualize-the-eyetracking-data)
+    -   [Downsample into 50ms bins](#downsample-into-50ms-bins)
+    -   [Look at overall looks to familiar image](#look-at-overall-looks-to-familiar-image)
+    -   [Save the model-ready data](#save-the-model-ready-data)
+
+Set up
+------
+
+``` r
+library(dplyr)
+library(littlelisteners)
+library(ggplot2)
+source("./plotting-helpers.R", encoding = "UTF8")
+looks <- readr::read_csv("./data/screened.csv.gz") %>% 
+  mutate(
+    Cond_Lab = Condition %>% 
+      factor(c("real", "MP", "nonsense"),
+             c("Real word", "Mispronunciation", "Nonword")))
+
+scores <- readr::read_csv("./data/scores.csv")
+```
+
+Visualize differences in standardized test results
+--------------------------------------------------
+
+First, confirm that the groups are age-matched. Each step on the *x*-axis is a pair of children matched by age, sex, and maternal education.
+
+``` r
+ggplot(scores) +
+  aes(x = resequence(Matching_PairNumber), y = EVT_Age, color = Group_Lab) +
+  geom_smooth(method = "lm", formula = y ~ 1, fullrange = TRUE, na.rm = TRUE) +
+  # Dodge a bit to avoid drawing points top of each other
+  geom_point(na.rm = TRUE, position = position_dodge(.5)) + 
+  scale_x_continuous_index() +
+  legend_top() + 
+  xlab("Pairs matched on age, sex and maternal ed.") +
+  ylab("Age (months)") + 
+  labs(caption = plot_text$group_intercept_smooth,
+       color = "Group")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/age-match-1.png" width="60%" />
+
+Now, do the same for the standardized test scores. These plots show how the children systematically differ in vocabulary size and articulation.
+
+``` r
+ggplot(scores) +
+  aes(x = resequence(Matching_PairNumber), y = EVT_Standard, 
+      color = Group_Lab) +
+  geom_smooth(method = "lm", formula = y ~ 1, 
+              fullrange = TRUE, na.rm = TRUE) +
+  geom_point(na.rm = TRUE) + 
+  scale_x_continuous_index() +
+  legend_top() + 
+  align_axis_right() +
+  labs(
+    x = plot_text$x_match_pairs,
+    y = "EVT-2 standard score",
+    caption = plot_text$group_intercept_smooth,
+    color = "Group")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-1.png" width="60%" />
+
+``` r
+
+last_plot() + 
+  aes(y = EVT_GSV) + 
+  ylab("EVT-2 growth scale value")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-2.png" width="60%" />
+
+``` r
+
+last_plot() + 
+  aes(y = PPVT_Standard) + 
+  ylab("PPVT-4 standard score")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-3.png" width="60%" />
+
+``` r
+
+last_plot() + 
+  aes(y = GFTA_Standard) + 
+  ylab("GFTA-2 standard score")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-4.png" width="60%" />
+
+``` r
+
+last_plot() + 
+  aes(y = EVT_Age) + 
+  ylab("Age (months)")
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-5.png" width="60%" />
+
+Visualize the eyetracking data
+------------------------------
+
+### Downsample into 50ms bins
+
+``` r
+times <- looks %>% 
+  distinct(Time) %>% 
+  arrange(Time) %>% 
+  trim_to_bin_width(bin_width = 3, key_time = 0, key_position = 2, Time,
+                    min_time = -900) %>% 
+  assign_bins(bin_width = 3, Time, bin_col = "Bin") %>% 
+  group_by(Bin) %>% 
+  mutate(BinTime = median(Time) %>% round(-1))
+
+looks <- looks %>% 
+  inner_join(times)
+```
+
+### Look at overall looks to familiar image
+
+In order to aggregate looks with my littlelisteners package, we need to define a response coding definition so it knows what's a target, what's offscreen, etc.
+
+``` r
+def <- create_response_def(
+  label = "LWL scheme",
+  primary = "Target",
+  others = "Distractor",
+  elsewhere = "tracked", 
+  missing = NA)
+```
+
+We observe that the groups differ on average in the real word and nonword conditions.
+
+``` r
+look_labs <- looks %>% 
+  select(Group, Condition, ends_with("_Lab")) %>% 
+  distinct()
+
+binned <- looks %>% 
+  aggregate_looks(def, Group + Study + ResearchID + 
+                    Condition + BinTime ~ GazeByImageAOI) %>% 
+  rename(Time = BinTime) %>% 
+  left_join(look_labs)
+
+ggplot(binned) + 
+  aes(x = Time, y = Prop, color = Group_Lab) + 
+  hline_chance() +
+  vline_onset() +
+  stat_mean_se() + 
+  facet_wrap("Cond_Lab", ncol = 1, scales = "free_x") + 
+  labs(
+    x = plot_text$x_time, 
+    y = plot_text$y_target, 
+    caption = plot_text$caption_mean_se,
+    color = plot_text$group) + 
+  legend_top()
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-4-1.png" width="80%" />
+
+But given that the groups differ in vocabulary, we can see the same pattern of results, kind of, by binning children based on EVT scores.
+
+``` r
+binned %>% 
+  inner_join(scores) %>% 
+  filter(!is.na(EVT_Standard)) %>% 
+  ggplot() + 
+    aes(x = Time, y = Prop, color = factor(ntile(EVT_GSV, 3))) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se() + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .7, option = "B") +
+    facet_wrap("Cond_Lab", ncol = 1, scales = "free_x") + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "EVT-2 GSV score tertile") + 
+    legend_top() + 
+    align_axis_right()
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png" width="80%" />
+
+The spaghetti plot shows that there are indeed more low-EVT children in the cochlear implant group.
+
+``` r
+binned %>% 
+  inner_join(scores) %>% 
+  filter(!is.na(EVT_Standard)) %>% 
+  filter(0 <= Time) %>% 
+  ggplot() + 
+    aes(x = Time, y = Prop, color = factor(ntile(EVT_GSV, 3))) + 
+    hline_chance() +
+    geom_line(aes(group = interaction(Condition, Study, ResearchID))) + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .8, option = "B") +
+    facet_grid(Cond_Lab ~ Group_Lab, scales = "free_x") + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "EVT-2 GSV tertile") + 
+    legend_top() + 
+    align_axis_right()
+```
+
+<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png" width="100%" />
+
+### Save the model-ready data
+
+``` r
+zscore <- function(...) as.vector(scale(...))
+scores <- scores %>%
+  mutate_at(vars(EVT_GSV, EVT_Standard, PPVT_GSV, PPVT_Standard,
+         GFTA_Standard), funs(z = zscore))
+
+binned %>% 
+  inner_join(scores) %>% 
+  select(ChildStudyID, Matching_PairNumber,
+         Group:Time, Cond_Lab, Group_Lab, Target, Distractor, Prop,
+         EVT_Age, EVT_GSV, EVT_Standard, PPVT_GSV, PPVT_Standard,
+         GFTA_Standard, ends_with("_z")) %>% 
+  filter(300 <= Time, Time <= 1800) %>% 
+  readr::write_csv("./data/model.csv.gz")
+```

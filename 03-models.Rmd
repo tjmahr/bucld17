@@ -36,8 +36,7 @@ looks <- readr::read_csv("./data/model.csv.gz") %>%
   mutate(
     Cond_Lab = Condition %>% 
       factor(c("real", "MP", "nonsense"),
-             c("Real word", "Mispronunciation", "Nonword")),
-    Model_Cond = Condition %>% factor(c("MP", "real", "nonsense")))
+             c("Real word", "Mispronunciation", "Nonword")))
 ```
 
 ### Add orthogonal polynomials
@@ -45,17 +44,11 @@ looks <- readr::read_csv("./data/model.csv.gz") %>%
 ```{r}
 looks <- looks %>% 
   polypoly::poly_add_columns(Time, degree = 3, prefix = "ot") 
-
-
 ```
 
-### Fit the model
+### Prep the datasets
 
-```{r ns-models, cache = TRUE}
-glmer_controls <- glmerControl(
-  optimizer = "bobyqa",
-  optCtrl = list(maxfun = 2e5))
-
+```{r}
 d_mp <- looks %>% 
   filter(Condition == "MP")
 
@@ -64,14 +57,12 @@ d_rw <- looks %>%
 
 d_ns <- looks %>% 
   filter(Condition == "nonsense")
+```
 
-m_ns <- glmer(
-  cbind(Target, Distractor) ~ 
-    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
-  family = binomial,
-  control = glmer_controls,
-  data = d_ns)
+We need to remove any pairs of children in which one of the children is missing
+an EVT score.
 
+```{r}
 no_vocab_pairs <- looks %>%
   distinct(ChildStudyID, Matching_PairNumber, EVT_Standard) %>%
   filter(is.na(EVT_Standard)) %>%
@@ -79,44 +70,78 @@ no_vocab_pairs <- looks %>%
   print()
 ```
 
+
+## Fit the models
+
+### Misponunciations
+
+```{r ns-models, cache = TRUE}
+glmer_controls <- glmerControl(
+  optimizer = "bobyqa",
+  optCtrl = list(maxfun = 2e5))
+
+m_mp <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_mp)
+summary(m_mp)
+```
+
 <!-- The two groups significantly differ with respect to their intercept terms, and -->
 <!-- not the shape of their growth curves. -->
 
 <!-- Now, we have to refit the model the model to exclude _pairs_ of children where one of the children is missing an EVT2 score vocabulary scores. -->
 
+Allow EVT to interact with time, time^2^ and time^3^ because these data are 
+curvier.
 
-#### Real word
-
-```{r rw-evt-models, cache = TRUE, eval = TRUE}
-m_rw_1a <- glmer(
+```{r mp-evt-models, cache = TRUE}
+m_mp_1a <- glmer(
   cbind(Target, Distractor) ~ 
-    Group * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+    Group * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_rw %>% anti_join(no_vocab_pairs))
-summary(m_rw_1a)
+  data = d_mp %>% anti_join(no_vocab_pairs))
+summary(m_mp_1a)
 
-m_rw_2a <- glmer(
+m_mp_2a <- glmer(
   cbind(Target, Distractor) ~ 
-    EVT_GSV_z * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+    EVT_GSV_z * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_rw %>% anti_join(no_vocab_pairs))
-summary(m_rw_2a)
+  data = d_mp %>% anti_join(no_vocab_pairs))
+summary(m_mp_2a)
 
-m_rw_3a <- glmer(
+m_mp_3a <- glmer(
   cbind(Target, Distractor) ~ 
-    Group * EVT_GSV_z * (1 + ot1) + 
-      ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+    Group * (1 + ot1 + ot2 + ot3) + 
+    EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
-  data = d_rw %>% anti_join(no_vocab_pairs))
-summary(m_rw_3a)
+  data = d_mp %>% anti_join(no_vocab_pairs))
+summary(m_mp_3a)
+
+m_mp_3b <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * EVT_GSV_z * (1 + ot1 + ot2 + ot3) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_mp %>% anti_join(no_vocab_pairs))
+summary(m_mp_3b)
 ```
 
 
-```{r, fig.width = 6}
-models <- list(group = m_rw_1a, vocab = m_rw_2a, group_vocab = m_rw_3a)
+
+```{r mp-plots, fig.width = 6, echo = FALSE}
+models <- list(
+  group = m_mp_1a, 
+  vocab = m_mp_2a, 
+  group_vocab = m_mp_3a, 
+  group_x_vocab = m_mp_3b)
 
 evt_lmh <- d_ns %>% 
   group_by(Group, Group_Lab) %>% 
@@ -140,11 +165,137 @@ data_grid3 <- d_ns %>%
   mutate(
     fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
 
+data_grid4 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
+
 fits <- bind_rows(
   data_grid1 %>% mutate(Model = "Group"),
   data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group x Vocab.")) %>% 
-  mutate(Model = factor(Model, c("Group", "Vocab.", "Group x Vocab.")))
+  data_grid3 %>% mutate(Model = "Group + Vocab."), 
+  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+  mutate(Model = factor(Model, c("Group", "Vocab.", 
+                                 "Group + Vocab.", "Group x Vocab.")))
+
+ggplot(fits) +
+  aes(x = Time, y = fitted, color = Group) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile))) + 
+  facet_wrap("Model", labeller = label_both) + 
+    labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
+       x = plot_text$x_time,
+       y = plot_text$y_fits) + 
+  legend_top() + 
+  align_axis_right() +
+  expand_limits(y = c(.25, .75))
+  
+
+ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
+  aes(x = Time, y = Prop) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    data = data_grid3) + 
+  facet_wrap("Group_Lab") + 
+  labs(caption = "Lines: Within group EVT quantiles (10%, 30%, 50%, 70%, 90%)",
+       x = plot_text$x_time,
+       y = plot_text$y_fits) + 
+  legend_top() + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in mispronunciation condition") +
+  expand_limits(y = c(.25, .75))
+```
+
+
+
+### Real words
+
+Only allow EVT to interact with time^1^.
+
+```{r rw-evt-models, cache = TRUE, eval = TRUE}
+m_rw_1a <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (1 + ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw %>% anti_join(no_vocab_pairs))
+summary(m_rw_1a)
+
+m_rw_2a <- glmer(
+  cbind(Target, Distractor) ~ 
+    EVT_GSV_z * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw %>% anti_join(no_vocab_pairs))
+summary(m_rw_2a)
+
+m_rw_3a <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (1 + ot1 + ot2 + ot3) + 
+    EVT_GSV_z * (1 + ot1) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw %>% anti_join(no_vocab_pairs))
+summary(m_rw_3a)
+
+m_rw_3b <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (1 + ot1 + ot2 + ot3) + 
+    Group * EVT_GSV_z * (1 + ot1) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw %>% anti_join(no_vocab_pairs))
+summary(m_rw_3b)
+```
+
+
+```{r rw-plots, fig.width = 6, echo = FALSE}
+models <- list(
+  group = m_rw_1a, 
+  vocab = m_rw_2a, 
+  group_vocab = m_rw_3a, 
+  group_x_vocab = m_rw_3b)
+
+evt_lmh <- d_ns %>% 
+  group_by(Group, Group_Lab) %>% 
+  tidy_quantile(EVT_GSV_z)
+
+data_grid1 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$group, ., type = "response", re.form = ~ 0))
+
+data_grid2 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$vocab, ., type = "response", re.form = ~ 0))
+
+data_grid3 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
+
+data_grid4 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
+
+fits <- bind_rows(
+  data_grid1 %>% mutate(Model = "Group"),
+  data_grid2 %>% mutate(Model = "Vocab."),
+  data_grid3 %>% mutate(Model = "Group + Vocab."), 
+  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+  mutate(Model = factor(Model, c("Group", "Vocab.", 
+                                 "Group + Vocab.", "Group x Vocab.")))
 
 ggplot(fits) +
   aes(x = Time, y = fitted, color = Group) + 
@@ -172,50 +323,15 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   legend_top() + 
   align_axis_right() + 
   ggtitle("Vocabulary effects in correct production condition")
-
 ```
 
 
 
-```{r mp-evt-models, cache = TRUE}
-m_mp_1a <- glmer(
-  cbind(Target, Distractor) ~ 
-    Group * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
-  family = binomial,
-  control = glmer_controls,
-  data = d_rw %>% anti_join(no_vocab_pairs))
-summary(m_mp_1a)
+### Nonword models
 
-m_mp_2a <- glmer(
-  cbind(Target, Distractor) ~ 
-    EVT_GSV_z * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
-  family = binomial,
-  control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
-summary(m_mp_2a)
-
-m_mp_3a <- glmer(
-  cbind(Target, Distractor) ~ 
-    Group * EVT_GSV_z * (1 + ot1) + 
-      ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
-  family = binomial,
-  control = glmer_controls,
-  data = d_mp %>% anti_join(no_vocab_pairs))
-summary(m_mp_3a)
-```
-
-
-
-
-
+Allow EVT to interact with time^1^.
 
 ```{r ns-evt-models, cache = TRUE}
-no_vocab_pairs <- looks %>%
-  distinct(ChildStudyID, Matching_PairNumber, EVT_Standard) %>%
-  filter(is.na(EVT_Standard)) %>%
-  select(Matching_PairNumber) %>%
-  print()
-
 m_ns_1a <- glmer(
   cbind(Target, Distractor) ~ 
     Group * (1 + ot1) + ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
@@ -234,16 +350,31 @@ summary(m_ns_2a)
 
 m_ns_3a <- glmer(
   cbind(Target, Distractor) ~ 
-    Group * EVT_GSV_z * (1 + ot1) + 
-      ot2 + ot3 + (ot1 + ot2 + ot3 | ChildStudyID),
+    Group * (1 + ot1 + ot2 + ot3) + 
+    EVT_GSV_z * (1 + ot1) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
   family = binomial,
   control = glmer_controls,
   data = d_ns %>% anti_join(no_vocab_pairs))
 summary(m_ns_3a)
+
+m_ns_3b <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (1 + ot1 + ot2 + ot3) + 
+    Group * EVT_GSV_z * (1 + ot1) + 
+    (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_ns %>% anti_join(no_vocab_pairs))
+summary(m_ns_3b)
 ```
 
-```{r, fig.width = 6}
-models <- list(group = m_ns_1a, vocab = m_ns_2a, group_vocab = m_ns_3a)
+```{r ns-plots, fig.width = 6, echo = FALSE}
+models <- list(
+  group = m_ns_1a, 
+  vocab = m_ns_2a, 
+  group_vocab = m_ns_3a, 
+  group_x_vocab = m_ns_3b)
 
 evt_lmh <- d_ns %>% 
   group_by(Group, Group_Lab) %>% 
@@ -267,11 +398,19 @@ data_grid3 <- d_ns %>%
   mutate(
     fitted = predict(models$group_vocab, ., type = "response", re.form = ~ 0))
 
+data_grid4 <- d_ns %>% 
+  distinct(Time, ot1, ot2, ot3, Group) %>% 
+  inner_join(evt_lmh) %>% 
+  mutate(
+    fitted = predict(models$group_x_vocab, ., type = "response", re.form = ~ 0))
+
 fits <- bind_rows(
   data_grid1 %>% mutate(Model = "Group"),
   data_grid2 %>% mutate(Model = "Vocab."),
-  data_grid3 %>% mutate(Model = "Group x Vocab.")) %>% 
-  mutate(Model = factor(Model, c("Group", "Vocab.", "Group x Vocab.")))
+  data_grid3 %>% mutate(Model = "Group + Vocab."), 
+  data_grid4 %>% mutate(Model = "Group x Vocab.")) %>% 
+  mutate(Model = factor(Model, c("Group", "Vocab.", 
+                                 "Group + Vocab.", "Group x Vocab.")))
 
 ggplot(fits) +
   aes(x = Time, y = fitted, color = Group) + 
@@ -299,26 +438,10 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   legend_top() + 
   align_axis_right() + 
   ggtitle("Vocabulary effects in nonword condition")
-
 ```
 
+***
 
-
-
-
-```{r, fig.width = 5}
-d_ns %>% 
-  anti_join(no_vocab_pairs) %>% 
-  distinct(Group_Lab, ResearchID, ChildStudyID, EVT_GSV) %>% 
-  ggplot() + 
-    theme(axis.text.x = element_text(size = rel(1))) + 
-    aes(x = Group_Lab, y = EVT_GSV) + 
-    geom_boxplot(width = .4) +
-    geom_point(position = position_jitter(.1), shape = 1) + 
-    labs(x = NULL, y = "EVT-2 GSV") + 
-    ggtitle("Children with CIs have more variable vocabularies") + 
-    align_axis_right()
-```
 
 
 ```{r, fig.width = 6}
@@ -380,4 +503,21 @@ ggplot(d_ns %>% anti_join(no_vocab_pairs)) +
   ggtitle("Vocabulary effects in nonword condition")
 
 ```
+
+
+
+```{r, fig.width = 5}
+d_ns %>% 
+  anti_join(no_vocab_pairs) %>% 
+  distinct(Group_Lab, ResearchID, ChildStudyID, EVT_GSV) %>% 
+  ggplot() + 
+    theme(axis.text.x = element_text(size = rel(1))) + 
+    aes(x = Group_Lab, y = EVT_GSV) + 
+    geom_boxplot(width = .4) +
+    geom_point(position = position_jitter(.1), shape = 1) + 
+    labs(x = NULL, y = "EVT-2 GSV") + 
+    ggtitle("Children with CIs have more variable vocabularies") + 
+    align_axis_right()
+```
+
 
