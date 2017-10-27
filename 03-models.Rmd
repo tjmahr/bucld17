@@ -73,7 +73,7 @@ no_vocab_pairs <- looks %>%
 
 ## Fit the models
 
-### Misponunciations
+### EVT-less models
 
 ```{r ns-models, cache = TRUE}
 glmer_controls <- glmerControl(
@@ -87,7 +87,26 @@ m_mp <- glmer(
   control = glmer_controls,
   data = d_mp)
 summary(m_mp)
+
+m_rw <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw)
+summary(m_rw)
+
+m_ns <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_ns)
+summary(m_ns)
 ```
+
+
+### Mispronunciations
 
 <!-- The two groups significantly differ with respect to their intercept terms, and -->
 <!-- not the shape of their growth curves. -->

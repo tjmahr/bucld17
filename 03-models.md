@@ -7,7 +7,8 @@ Tristan Mahr
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)
     -   [Prep the datasets](#prep-the-datasets)
 -   [Fit the models](#fit-the-models)
-    -   [Misponunciations](#misponunciations)
+    -   [EVT-less models](#evt-less-models)
+    -   [Mispronunciations](#mispronunciations)
     -   [Real words](#real-words)
     -   [Nonword models](#nonword-models)
 
@@ -65,7 +66,7 @@ no_vocab_pairs <- looks %>%
 Fit the models
 --------------
 
-### Misponunciations
+### EVT-less models
 
 ``` r
 glmer_controls <- glmerControl(
@@ -123,7 +124,113 @@ summary(m_mp)
 #> GrpNrmlHr:1 -0.319  0.452 -0.707  0.211  0.273              
 #> GrpNrmlHr:2  0.212 -0.299  0.211 -0.709  0.039 -0.298       
 #> GrpNrmlHr:3 -0.094  0.132  0.275  0.039 -0.711 -0.388 -0.052
+
+m_rw <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_rw)
+summary(m_rw)
+#> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+#>  Family: binomial  ( logit )
+#> Formula: cbind(Target, Distractor) ~ Group * (ot1 + ot2 + ot3) + (ot1 +  
+#>     ot2 + ot3 | ChildStudyID)
+#>    Data: d_rw
+#> Control: glmer_controls
+#> 
+#>      AIC      BIC   logLik deviance df.resid 
+#>  11558.8  11662.1  -5761.4  11522.8     2276 
+#> 
+#> Scaled residuals: 
+#>      Min       1Q   Median       3Q      Max 
+#> -3.16093 -0.42522  0.00612  0.44104  2.44476 
+#> 
+#> Random effects:
+#>  Groups       Name        Variance Std.Dev. Corr             
+#>  ChildStudyID (Intercept) 0.5225   0.7228                    
+#>               ot1         4.8612   2.2048    0.49            
+#>               ot2         1.7769   1.3330   -0.24 -0.19      
+#>               ot3         0.6677   0.8171   -0.28 -0.46  0.34
+#> Number of obs: 2294, groups:  ChildStudyID, 74
+#> 
+#> Fixed effects:
+#>                        Estimate Std. Error z value Pr(>|z|)    
+#> (Intercept)              0.7337     0.1194   6.146 7.96e-10 ***
+#> GroupNormalHearing       0.4500     0.1688   2.665 0.007697 ** 
+#> ot1                      2.3730     0.3681   6.447 1.14e-10 ***
+#> ot2                     -0.7607     0.2278  -3.340 0.000838 ***
+#> ot3                     -0.1179     0.1468  -0.803 0.421818    
+#> GroupNormalHearing:ot1   0.2147     0.5203   0.413 0.679883    
+#> GroupNormalHearing:ot2  -0.5656     0.3216  -1.759 0.078560 .  
+#> GroupNormalHearing:ot3   0.1678     0.2067   0.811 0.417100    
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> Correlation of Fixed Effects:
+#>             (Intr) GrpNrH ot1    ot2    ot3    GrNH:1 GrNH:2
+#> GrpNrmlHrng -0.707                                          
+#> ot1          0.488 -0.345                                   
+#> ot2         -0.230  0.163 -0.170                            
+#> ot3         -0.255  0.180 -0.407  0.314                     
+#> GrpNrmlHr:1 -0.345  0.490 -0.707  0.121  0.288              
+#> GrpNrmlHr:2  0.163 -0.231  0.121 -0.707 -0.220 -0.169       
+#> GrpNrmlHr:3  0.181 -0.256  0.289 -0.221 -0.707 -0.412  0.317
+
+m_ns <- glmer(
+  cbind(Target, Distractor) ~ 
+    Group * (ot1 + ot2 + ot3) + (ot1 + ot2 + ot3 | ChildStudyID),
+  family = binomial,
+  control = glmer_controls,
+  data = d_ns)
+summary(m_ns)
+#> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+#>  Family: binomial  ( logit )
+#> Formula: cbind(Target, Distractor) ~ Group * (ot1 + ot2 + ot3) + (ot1 +  
+#>     ot2 + ot3 | ChildStudyID)
+#>    Data: d_ns
+#> Control: glmer_controls
+#> 
+#>      AIC      BIC   logLik deviance df.resid 
+#>  11534.9  11638.2  -5749.4  11498.9     2276 
+#> 
+#> Scaled residuals: 
+#>      Min       1Q   Median       3Q      Max 
+#> -2.74598 -0.46161 -0.02695  0.45878  2.74382 
+#> 
+#> Random effects:
+#>  Groups       Name        Variance Std.Dev. Corr             
+#>  ChildStudyID (Intercept) 0.3753   0.6127                    
+#>               ot1         5.5977   2.3660    0.47            
+#>               ot2         1.6033   1.2662    0.04  0.24      
+#>               ot3         1.1856   1.0888   -0.16 -0.41 -0.30
+#> Number of obs: 2294, groups:  ChildStudyID, 74
+#> 
+#> Fixed effects:
+#>                        Estimate Std. Error z value Pr(>|z|)    
+#> (Intercept)            -0.74499    0.10148  -7.341 2.11e-13 ***
+#> GroupNormalHearing     -0.55025    0.14341  -3.837 0.000125 ***
+#> ot1                    -1.62901    0.39598  -4.114 3.89e-05 ***
+#> ot2                     0.19217    0.21894   0.878 0.380103    
+#> ot3                     0.05652    0.18919   0.299 0.765131    
+#> GroupNormalHearing:ot1 -0.48871    0.55840  -0.875 0.381464    
+#> GroupNormalHearing:ot2  0.30571    0.30795   0.993 0.320848    
+#> GroupNormalHearing:ot3  0.01835    0.26714   0.069 0.945227    
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> Correlation of Fixed Effects:
+#>             (Intr) GrpNrH ot1    ot2    ot3    GrNH:1 GrNH:2
+#> GrpNrmlHrng -0.707                                          
+#> ot1          0.465 -0.329                                   
+#> ot2          0.047 -0.033  0.239                            
+#> ot3         -0.147  0.104 -0.374 -0.245                     
+#> GrpNrmlHr:1 -0.330  0.465 -0.708 -0.168  0.265              
+#> GrpNrmlHr:2 -0.033  0.044 -0.169 -0.709  0.175  0.235       
+#> GrpNrmlHr:3  0.104 -0.149  0.266  0.175 -0.707 -0.380 -0.251
 ```
+
+### Mispronunciations
 
 <!-- The two groups significantly differ with respect to their intercept terms, and -->
 <!-- not the shape of their growth curves. -->
