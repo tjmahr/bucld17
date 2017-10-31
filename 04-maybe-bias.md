@@ -1,7 +1,7 @@
 Consider the first image viewed
 ================
 Tristan Mahr
-2017-10-27
+2017-10-31
 
 -   [Set up](#set-up)
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)

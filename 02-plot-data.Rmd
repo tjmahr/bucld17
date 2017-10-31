@@ -129,7 +129,7 @@ def <- create_response_def(
 We observe that the groups differ on average in the real word and nonword
 conditions.
 
-```{r, fig.asp = 1 / 0.618, fig.width = 6}
+```{r all-conditions-stacked, fig.asp = 1 / 0.618, fig.width = 6}
 look_labs <- looks %>% 
   select(Group, Condition, ends_with("_Lab")) %>% 
   distinct()
@@ -154,7 +154,7 @@ ggplot(binned) +
   legend_top()
 ```
 
-```{r}
+```{r by-condition}
 after_onset <- binned %>% filter(0 <= Time) 
 
 after_onset %>% 
@@ -363,13 +363,52 @@ after_onset %>%
     legend_top() + 
     align_axis_right() + 
     expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "MP"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
+
+after_onset %>% 
+  ggplot() + 
+    theme_grey(base_size = 12) + 
+    aes(x = Time, y = Prop, color = Cond_Lab, shape = Group_Lab) + 
+    hline_chance() +
+    vline_onset() +
+    stat_mean_se(data = after_onset, alpha = 0) + 
+    stat_mean_se(data = . %>% filter(Condition %in% c("real", "MP"))) +
+    viridis::scale_color_viridis(end = .8, discrete = TRUE) + 
+    labs(
+      x = plot_text$x_time, 
+      y = plot_text$y_target, 
+      caption = plot_text$caption_mean_se,
+      color = "Child hears",
+      shape = "Group") + 
+    facet_wrap("Group") +
+    legend_top() + 
+    align_axis_right() + 
+    expand_limits(x = c(.1, .9))
 ```
 
 
 But given that the groups differ in vocabulary, we can see the same pattern of
 results, kind of, by binning children based on EVT scores.
 
-```{r, fig.asp = 1 / 0.618, fig.width = 6}
+```{r evt-tertile, fig.asp = 1 / 0.618, fig.width = 6}
 binned %>% 
   inner_join(scores) %>% 
   filter(!is.na(EVT_Standard)) %>% 
@@ -392,7 +431,7 @@ binned %>%
 The spaghetti plot shows that there are indeed more low-EVT children in the
 cochlear implant group.
 
-```{r, fig.asp = 1, fig.width = 6, out.width = "100%"}
+```{r evt-tertile-spaghetti, fig.asp = 1, fig.width = 6, out.width = "100%"}
 binned %>% 
   inner_join(scores) %>% 
   filter(!is.na(EVT_Standard)) %>% 
