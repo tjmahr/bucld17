@@ -476,7 +476,7 @@ summary(m_mp_3b)
 
 The last two plots are from the Group + Vocab models.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-3.png" width="80%" />
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-3.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-4.png" width="80%" />
 
 Model comparison here should be taken with a grain of salt because we are adding predictors in batches of four coefficients (the predictor's main effect and interactions with time). AIC and BIC penalize fit measures based on number of parameters, so we are adding big penalities with each additional predictor. Consider this more of coarse look at how batches of coefficients improve model fit.
 
@@ -728,6 +728,51 @@ The last two plots are from the Group + Vocab model.
 
 <img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-3.png" width="80%" />
 
+This final plot is from the Group x Vocab model. I think the Normal Hearing side is overly sensitive to some outlying behavior in the high EVT normal hearing group.
+
+``` r
+ggplot(fits %>% filter(Model == "Group x Vocab.")) +
+  aes(x = Time, y = fitted, color = quantile) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    size = 1) + 
+  facet_wrap("Group_Lab") + 
+  viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Within group EVT quantiles") + 
+  legend_bottom(legend.justification = "right") + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in correct production condition")
+```
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2-1.png" width="80%" />
+
+``` r
+
+d_rw %>% 
+  anti_join(no_vocab_pairs) %>% 
+  left_join(condition_labels) %>% 
+  group_by(Group) %>% 
+  mutate(EVT_Bin = ntile(EVT_GSV, 5) %>% factor()) %>% 
+  ungroup() %>% 
+  ggplot() +
+    aes(x = Time, y = Prop, color = EVT_Bin) + 
+    hline_chance() +
+    stat_mean_se() +
+    facet_wrap("Group_Lab") + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+    labs(x = plot_text$x_time,
+         y = plot_text$y_fits,
+         color = "Within group EVT bins") + 
+    legend_bottom(legend.justification = "right") + 
+    align_axis_right() + 
+    ggtitle("Vocabulary effects in correct production condition")
+```
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2-2.png" width="80%" />
+
 ``` r
 do.call(anova, unname(models))
 #> Data: d_rw %>% anti_join(no_vocab_pairs)
@@ -973,7 +1018,7 @@ summary(m_ns_3b)
 
 The last two plots are from the Group + Vocab model.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-3.png" width="80%" />
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-3.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-4.png" width="80%" />
 
 ``` r
 do.call(anova, unname(models))

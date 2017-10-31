@@ -304,6 +304,26 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   align_axis_right() + 
   ggtitle("Vocabulary effects in mispronunciation condition") +
   expand_limits(y = c(.25, .75))
+
+d_mp %>% 
+  anti_join(no_vocab_pairs) %>% 
+  left_join(condition_labels) %>% 
+  group_by(Group) %>% 
+  mutate(EVT_Bin = ntile(EVT_GSV, 5) %>% factor()) %>% 
+  ungroup() %>% 
+  ggplot() +
+    aes(x = Time, y = Prop, color = EVT_Bin) + 
+    hline_chance() +
+    stat_mean_se() +
+    facet_wrap("Group_Lab") + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+    labs(x = plot_text$x_time,
+         y = plot_text$y_fits,
+         color = "Within group EVT bins") + 
+    legend_bottom(legend.justification = "right") + 
+    align_axis_right() + 
+    ggtitle("Vocabulary effects in mispronunciation condition") +
+  expand_limits(y = c(.25, .75))
 ```
 
 Model comparison here should be taken with a grain of salt because we are adding
@@ -421,6 +441,47 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   ggtitle("Vocabulary effects in correct production condition")
 ```
 
+This final plot is from the Group x Vocab model. I think the Normal Hearing side
+is overly sensitive to some outlying behavior in the high EVT normal hearing
+group.
+
+```{r rw-plots-2}
+ggplot(fits %>% filter(Model == "Group x Vocab.")) +
+  aes(x = Time, y = fitted, color = quantile) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    size = 1) + 
+  facet_wrap("Group_Lab") + 
+  viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Within group EVT quantiles") + 
+  legend_bottom(legend.justification = "right") + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in correct production condition")
+
+d_rw %>% 
+  anti_join(no_vocab_pairs) %>% 
+  left_join(condition_labels) %>% 
+  group_by(Group) %>% 
+  mutate(EVT_Bin = ntile(EVT_GSV, 5) %>% factor()) %>% 
+  ungroup() %>% 
+  ggplot() +
+    aes(x = Time, y = Prop, color = EVT_Bin) + 
+    hline_chance() +
+    stat_mean_se() +
+    facet_wrap("Group_Lab") + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+    labs(x = plot_text$x_time,
+         y = plot_text$y_fits,
+         color = "Within group EVT bins") + 
+    legend_bottom(legend.justification = "right") + 
+    align_axis_right() + 
+    ggtitle("Vocabulary effects in correct production condition")
+```
+
+
 ```{r real-word-anova}
 do.call(anova, unname(models))
 ```
@@ -526,6 +587,25 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   legend_bottom(legend.justification = "right") + 
   align_axis_right() + 
   ggtitle("Vocabulary effects in nonword condition")
+
+d_ns %>% 
+  anti_join(no_vocab_pairs) %>% 
+  left_join(condition_labels) %>% 
+  group_by(Group) %>% 
+  mutate(EVT_Bin = ntile(EVT_GSV, 5) %>% factor()) %>% 
+  ungroup() %>% 
+  ggplot() +
+    aes(x = Time, y = Prop, color = EVT_Bin) + 
+    hline_chance() +
+    stat_mean_se() +
+    facet_wrap("Group_Lab") + 
+    viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+    labs(x = plot_text$x_time,
+         y = plot_text$y_fits,
+         color = "Within group EVT bins") + 
+    legend_bottom(legend.justification = "right") + 
+    align_axis_right() + 
+    ggtitle("Vocabulary effects in nonword condition")
 ```
 
 
