@@ -230,7 +230,7 @@ m_mp_3b <- glmer(
 summary(m_mp_3b)
 ```
 
-
+The last two plots are from the Group + Vocab models.
 
 ```{r mp-plots, fig.width = 6, echo = FALSE}
 scale_plasma <- viridis::scale_color_viridis(
@@ -288,6 +288,22 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   align_axis_right() + 
   ggtitle("Vocabulary effects in mispronunciation condition") +
   expand_limits(y = c(.25, .75))
+
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted, color = quantile) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    size = 1) + 
+  facet_wrap("Group_Lab") + 
+  viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Within group EVT quantiles") + 
+  legend_bottom(legend.justification = "right") + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in mispronunciation condition") +
+  expand_limits(y = c(.25, .75))
 ```
 
 Model comparison here should be taken with a grain of salt because we are adding
@@ -297,7 +313,7 @@ parameters, so we are adding big penalities with each additional predictor.
 Consider this more of coarse look at how batches of coefficients improve model
 fit.
 
-```{r}
+```{r mp-anova}
 do.call(anova, unname(models))
 ```
 
@@ -344,7 +360,7 @@ summary(m_rw_3b)
 ```
 
 
-
+The last two plots are from the Group + Vocab model.
 
 ```{r rw-plots, fig.width = 6, echo = FALSE}
 models <- list(
@@ -388,9 +404,24 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   legend_top() + 
   align_axis_right() + 
   ggtitle("Vocabulary effects in correct production condition")
+
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted, color = quantile) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    size = 1) + 
+  facet_wrap("Group_Lab") + 
+  viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Within group EVT quantiles") + 
+  legend_bottom(legend.justification = "right") + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in correct production condition")
 ```
 
-```{r}
+```{r real-word-anova}
 do.call(anova, unname(models))
 ```
 
@@ -437,6 +468,8 @@ m_ns_3b <- glmer(
 summary(m_ns_3b)
 ```
 
+The last two plots are from the Group + Vocab model.
+
 ```{r ns-plots, fig.width = 6, echo = FALSE}
 models <- list(
   Group = m_ns_1a, 
@@ -478,10 +511,25 @@ ggplot(fits %>% filter(Model == "Group + Vocab.")) +
   legend_top() + 
   align_axis_right() + 
   ggtitle("Vocabulary effects in nonword condition")
+
+ggplot(fits %>% filter(Model == "Group + Vocab.")) +
+  aes(x = Time, y = fitted, color = quantile) + 
+  hline_chance() +
+  geom_line(
+    aes(x = Time, y = fitted, group = interaction(Group, quantile)),
+    size = 1) + 
+  facet_wrap("Group_Lab") + 
+  viridis::scale_color_viridis(discrete = TRUE, end = .85, option = "B") +
+  labs(x = plot_text$x_time,
+       y = plot_text$y_fits,
+       color = "Within group EVT quantiles") + 
+  legend_bottom(legend.justification = "right") + 
+  align_axis_right() + 
+  ggtitle("Vocabulary effects in nonword condition")
 ```
 
 
-```{r}
+```{r nonword-anova}
 do.call(anova, unname(models))
 ```
 
@@ -489,7 +537,7 @@ do.call(anova, unname(models))
 ***
 
 
-```{r, fig.width = 5}
+```{r vocab-boxplot, fig.width = 5}
 d_ns %>% 
   anti_join(no_vocab_pairs) %>% 
   distinct(Group_Lab, ResearchID, ChildStudyID, EVT_GSV) %>% 

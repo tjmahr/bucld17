@@ -1,7 +1,7 @@
 Growth curve models
 ================
 Tristan Mahr
-2017-10-27
+2017-10-31
 
 -   [Set up](#set-up)
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)
@@ -474,7 +474,9 @@ summary(m_mp_3b)
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" />
+The last two plots are from the Group + Vocab models.
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-3.png" width="80%" />
 
 Model comparison here should be taken with a grain of salt because we are adding predictors in batches of four coefficients (the predictor's main effect and interactions with time). AIC and BIC penalize fit measures based on number of parameters, so we are adding big penalities with each additional predictor. Consider this more of coarse look at how batches of coefficients improve model fit.
 
@@ -722,7 +724,9 @@ summary(m_rw_3b)
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2.png" width="80%" />
+The last two plots are from the Group + Vocab model.
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-3.png" width="80%" />
 
 ``` r
 do.call(anova, unname(models))
@@ -967,7 +971,9 @@ summary(m_ns_3b)
 #> GNH:1:EVT_G -0.068 -0.112 -0.151 -0.008 -0.007 -0.189 -0.256  0.004  0.004  0.415 -0.454
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" />
+The last two plots are from the Group + Vocab model.
+
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-3.png" width="80%" />
 
 ``` r
 do.call(anova, unname(models))
@@ -1006,4 +1012,4 @@ d_ns %>%
     align_axis_right()
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-8-1.png" width="80%" />
+<img src="03-models_files/figure-markdown_github-ascii_identifiers/vocab-boxplot-1.png" width="80%" />
