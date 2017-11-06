@@ -15,6 +15,15 @@ stats and prepares by-group plots of test scores.
 `03-models.Rmd` ([output](./03-models.md)) runs growth curve analyses
 for the data.
 
+`04-maybe-bias.Rmd` ([output](./04-maybe-bias.md)) runs an additional exploratory 
+growth curve model where trials are separated based on which image the child 
+fixates on at noun onset (the trial's _bias_). 
+
+`get-data.R` downloads the raw data from our lab's internal database. It cannot be 
+reproduced by people outside our lab. Therefore, I try to keep the script brief and 
+have it save the needed data into the folder data-raw. Later processing steps can 
+be reproduced.
+
 ## Additional information
 
 ### Abstract from conference handbook
