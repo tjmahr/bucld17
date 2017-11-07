@@ -64,7 +64,8 @@ I think. (We collected data at two different university labs.) I don't know.
 
 ### Reproducibility tips
 
-Don't hesitate to ask. These things can be finicky on other people's computers.
+Don't hesitate to ask here with an issue or by emailing Tristan. These things 
+can be finicky on other people's computers.
 
 This code should install most of the needed packages. Otherwise, the 
 session-info at the bottom of each script has the version and provenance of 
