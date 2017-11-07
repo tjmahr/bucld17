@@ -25,9 +25,9 @@ of test scores.
 `03-models.Rmd` ([output](./03-models.md)) runs growth curve analyses
 for the data.
 
-`04-maybe-bias.Rmd` ([output](./04-maybe-bias.md)) runs an additional exploratory 
-growth curve model where trials are separated based on which image the child 
-fixates on at noun onset (the trial's _bias_). 
+`04-maybe-bias.Rmd` ([output](./04-maybe-bias.md)) runs an additional
+exploratory growth curve model where trials are separated based on which image
+the child fixates on at noun onset (the trial's _bias_).
 
 ### Directories
 
@@ -36,8 +36,8 @@ fixates on at noun onset (the trial's _bias_).
 `data/`: Screened data ready for plotting or modeling.
 
 Large csv files are saved as compressed `.csv.gz` files. The readr package,
-specifically the function `readr::read_csv()` can automatically uncompress these
-files.
+specifically the function `readr::read_csv()`, can automatically uncompress
+these files.
 
 `assets/`: The image files and model caches for the notebooks are stored here.
 
@@ -61,11 +61,14 @@ I think. (We collected data at two different university labs.)
 
 Don't hesitate to ask. These things can be finicky on other people's computers.
 
-This code should install most of the needed packages.
+This code should install most of the needed packages. Otherwise, the 
+session-info at the bottom of each script has the version and provenance of 
+all R packages used.
 
 ```r
 install.packages(c("knitr", "rmarkdown", "tidyverse", "lme4", 
-                 "yaml", "polypoly", "devtools"))
+                 "yaml", "polypoly", "devtools", "rprojroot",
+                 "viridis"))
 devtools::install_github("tjmahr/littlelisteners")
 ```
 

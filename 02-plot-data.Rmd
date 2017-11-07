@@ -524,4 +524,11 @@ looks %>%
   readr::write_csv("./data/bias.csv.gz")
 ```
 
+***
+
+```{r}
+sessioninfo::session_info()
+```
+
+
 

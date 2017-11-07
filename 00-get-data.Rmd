@@ -189,3 +189,10 @@ readr::write_csv(df_trial_info, file.path("data-raw", "trials.csv"))
 readr::write_csv(df_blocks, file.path("data-raw", "blocks.csv"))
 ```
 
+
+***
+
+```{r}
+sessioninfo::session_info()
+```
+

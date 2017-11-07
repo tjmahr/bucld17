@@ -636,3 +636,11 @@ d_ns %>%
 ```
 
 
+***
+
+```{r}
+sessioninfo::session_info()
+```
+
+
+

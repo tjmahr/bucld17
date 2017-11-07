@@ -207,4 +207,11 @@ for (x in unique(only_bias_looks$Cond_Lab)) {
 ```
 
 
+***
+
+```{r}
+sessioninfo::session_info()
+```
+
+
 
