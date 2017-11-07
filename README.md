@@ -52,7 +52,7 @@ scripts.
 `Makefile` is a makefile to automate running and rendering the notebook files.
 
 The code's `LICENSE` is the GPL-3, but I don't think that should matter. The
-data is copyrighted and belongs to the University of Wisconsin&endash;Madison, 
+data is copyrighted and belongs to the University of Wisconsin–Madison, 
 I think. (We collected data at two different university labs.)
 
 ## Additional information
