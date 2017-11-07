@@ -8,9 +8,11 @@ output:
     toc_depth: 4
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 library("knitr")
 opts_chunk$set(
+  cache.path = "assets/cache/01-",
+  fig.path = "assets/figure/01-",
   warning = FALSE,
   collapse = TRUE, 
   comment = "#>", 
@@ -21,6 +23,12 @@ opts_chunk$set(
   out.width = "80%")
 options(width = 100)
 ```
+
+This script screens the eyetracking data by removing unreliable trials and
+unreliable blocks of trials. It preserves the pairs of matched children. (If a
+child is removed for have no reliable eyetracking data, their match is also
+removed.) Counts of trials and children at each step of screening are printed
+too.
 
 ## Set up
 

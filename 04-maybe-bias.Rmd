@@ -8,9 +8,11 @@ output:
     toc_depth: 4
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 library("knitr")
 opts_chunk$set(
+  cache.path = "assets/cache/04-",
+  fig.path = "assets/figure/04-",
   warning = FALSE,
   collapse = TRUE, 
   comment = "#>", 
@@ -21,6 +23,9 @@ opts_chunk$set(
   out.width = "80%")
 options(width = 100)
 ```
+
+This script fits an exploratory growth curve model where looks are 
+re-aggregated based on where the child fixated at the onset of the noun.
 
 ## Set up
 

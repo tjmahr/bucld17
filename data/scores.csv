@@ -1,10 +1,4 @@
 Group,Matching_PairNumber,ChildStudyID,Study,ResearchID,ChildID,Female,AAE,LateTalker,CImplant,Maternal_Education,Maternal_Education_Level,EVT_Age,EVT_Raw,EVT_GSV,EVT_Standard,PPVT_Age,PPVT_Raw,PPVT_GSV,PPVT_Standard,GFTA_Age,GFTA_RawCorrect,GFTA_NumTranscribed,GFTA_AdjCorrect,GFTA_Standard,Group_Lab
-CochlearImplant,28,308,TimePoint2,665L,88,1,0,0,1,College Degree,6,52,47,124,92,52,48,103,83,NA,NA,NA,NA,NA,Cochlear implant
-CochlearImplant,31,319,TimePoint2,679L,102,0,0,0,1,Technical/Associate's Degree,5,47,46,124,99,46,36,92,79,NA,NA,NA,NA,NA,Cochlear implant
-NormalHearing,10,328,TimePoint2,002L,151,1,0,0,0,College Degree,6,51,72,144,122,51,101,142,126,NA,NA,NA,NA,NA,Normal hearing
-NormalHearing,12,335,TimePoint2,010L,159,0,0,0,0,Graduate Degree,7,44,65,139,124,44,109,148,140,NA,NA,NA,NA,NA,Normal hearing
-NormalHearing,35,338,TimePoint2,014L,163,0,0,0,0,Graduate Degree,7,51,64,138,113,50,91,135,118,NA,NA,NA,NA,NA,Normal hearing
-NormalHearing,20,354,TimePoint2,030L,179,1,0,0,0,College Degree,6,50,78,148,128,49,111,149,136,NA,NA,NA,NA,NA,Normal hearing
 NormalHearing,8,368,TimePoint2,044L,193,1,0,0,0,College Degree,6,44,45,123,101,44,50,104,94,NA,NA,NA,NA,NA,Normal hearing
 NormalHearing,31,376,TimePoint2,053L,202,0,0,0,0,Technical/Associate's Degree,5,47,69,142,125,47,100,142,131,NA,NA,NA,NA,NA,Normal hearing
 NormalHearing,4,380,TimePoint2,058L,207,1,0,0,0,Some College (2+ years),5,48,65,139,117,48,79,127,112,NA,NA,NA,NA,NA,Normal hearing
@@ -15,6 +9,12 @@ NormalHearing,28,414,TimePoint2,099L,248,1,0,0,0,College Degree,6,51,50,127,98,5
 CochlearImplant,25,269,TimePoint2,608L,31,1,0,0,1,Graduate Degree,7,55,86,154,131,52,123,158,139,NA,NA,NA,NA,NA,Cochlear implant
 NormalHearing,36,287,TimePoint2,630L,53,1,0,0,0,Trade School,5,46,75,146,131,46,100,142,131,NA,NA,NA,NA,NA,Normal hearing
 NormalHearing,17,294,TimePoint2,640L,63,1,0,0,0,High School Diploma,3,49,75,146,128,48,95,138,123,NA,NA,NA,NA,NA,Normal hearing
+CochlearImplant,28,308,TimePoint2,665L,88,1,0,0,1,College Degree,6,52,47,124,92,52,48,103,83,NA,NA,NA,NA,NA,Cochlear implant
+CochlearImplant,31,319,TimePoint2,679L,102,0,0,0,1,Technical/Associate's Degree,5,47,46,124,99,46,36,92,79,NA,NA,NA,NA,NA,Cochlear implant
+NormalHearing,10,328,TimePoint2,002L,151,1,0,0,0,College Degree,6,51,72,144,122,51,101,142,126,NA,NA,NA,NA,NA,Normal hearing
+NormalHearing,12,335,TimePoint2,010L,159,0,0,0,0,Graduate Degree,7,44,65,139,124,44,109,148,140,NA,NA,NA,NA,NA,Normal hearing
+NormalHearing,35,338,TimePoint2,014L,163,0,0,0,0,Graduate Degree,7,51,64,138,113,50,91,135,118,NA,NA,NA,NA,NA,Normal hearing
+NormalHearing,20,354,TimePoint2,030L,179,1,0,0,0,College Degree,6,50,78,148,128,49,111,149,136,NA,NA,NA,NA,NA,Normal hearing
 CochlearImplant,1,789,CochlearV1,300E,284,0,0,0,1,College Degree,6,57,50,127,92,57,61,113,88,57,38,77,38,72,Cochlear implant
 CochlearImplant,2,790,CochlearV1,301E,285,1,0,0,1,Technical/Associate's Degree,5,53,55,131,100,53,66,117,96,53,29,77,29,59,Cochlear implant
 CochlearImplant,3,791,CochlearV1,302E,286,1,0,0,1,Some College (2+ years),5,37,26,106,96,37,29,85,88,37,14,77,14,59,Cochlear implant

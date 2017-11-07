@@ -1,7 +1,7 @@
 Plot the eyetracking data
 ================
 Tristan Mahr
-2017-10-31
+2017-11-07
 
 -   [Set up](#set-up)
 -   [Visualize differences in standardized test results](#visualize-differences-in-standardized-test-results)
@@ -10,6 +10,8 @@ Tristan Mahr
     -   [Look at overall looks to familiar image](#look-at-overall-looks-to-familiar-image)
     -   [Get descriptives for slide](#get-descriptives-for-slide)
     -   [Save the model-ready data](#save-the-model-ready-data)
+
+This script prepares all the various plots we considered using for our presentation. It also saves the final datasets used for the growth curve models.
 
 Set up
 ------
@@ -47,7 +49,7 @@ ggplot(scores) +
        color = "Group")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/age-match-1.png" width="60%" />
+<img src="assets/figure/02-age-match-1.png" width="60%" />
 
 Now, do the same for the standardized test scores. These plots show how the children systematically differ in vocabulary size and articulation.
 
@@ -68,7 +70,7 @@ ggplot(scores) +
     color = "Group")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-1.png" width="60%" />
+<img src="assets/figure/02-scores-by-group-1.png" width="60%" />
 
 ``` r
 
@@ -77,7 +79,7 @@ last_plot() +
   ylab("EVT-2 growth scale value")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-2.png" width="60%" />
+<img src="assets/figure/02-scores-by-group-2.png" width="60%" />
 
 ``` r
 
@@ -86,7 +88,7 @@ last_plot() +
   ylab("PPVT-4 standard score")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-3.png" width="60%" />
+<img src="assets/figure/02-scores-by-group-3.png" width="60%" />
 
 ``` r
 
@@ -95,7 +97,7 @@ last_plot() +
   ylab("GFTA-2 standard score")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-4.png" width="60%" />
+<img src="assets/figure/02-scores-by-group-4.png" width="60%" />
 
 ``` r
 
@@ -104,7 +106,7 @@ last_plot() +
   ylab("Age (months)")
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/scores-by-group-5.png" width="60%" />
+<img src="assets/figure/02-scores-by-group-5.png" width="60%" />
 
 Visualize the eyetracking data
 ------------------------------
@@ -165,7 +167,7 @@ ggplot(binned) +
   legend_top()
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/all-conditions-stacked-1.png" width="80%" />
+<img src="assets/figure/02-all-conditions-stacked-1.png" width="80%" />
 
 ``` r
 after_onset <- binned %>% filter(0 <= Time) 
@@ -191,7 +193,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-1.png" width="80%" />
+<img src="assets/figure/02-by-condition-1.png" width="80%" />
 
 ``` r
 
@@ -215,7 +217,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-2.png" width="80%" />
+<img src="assets/figure/02-by-condition-2.png" width="80%" />
 
 ``` r
 
@@ -242,7 +244,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-3.png" width="80%" />
+<img src="assets/figure/02-by-condition-3.png" width="80%" />
 
 ``` r
 
@@ -269,7 +271,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-4.png" width="80%" />
+<img src="assets/figure/02-by-condition-4.png" width="80%" />
 
 ``` r
 
@@ -296,7 +298,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-5.png" width="80%" />
+<img src="assets/figure/02-by-condition-5.png" width="80%" />
 
 ``` r
 
@@ -319,7 +321,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-6.png" width="80%" />
+<img src="assets/figure/02-by-condition-6.png" width="80%" />
 
 ``` r
 
@@ -349,7 +351,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-7.png" width="80%" />
+<img src="assets/figure/02-by-condition-7.png" width="80%" />
 
 ``` r
 
@@ -373,7 +375,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-8.png" width="80%" />
+<img src="assets/figure/02-by-condition-8.png" width="80%" />
 
 ``` r
 
@@ -399,7 +401,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-9.png" width="80%" />
+<img src="assets/figure/02-by-condition-9.png" width="80%" />
 
 ``` r
 
@@ -423,7 +425,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-10.png" width="80%" />
+<img src="assets/figure/02-by-condition-10.png" width="80%" />
 
 ``` r
 
@@ -447,7 +449,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-11.png" width="80%" />
+<img src="assets/figure/02-by-condition-11.png" width="80%" />
 
 ``` r
 
@@ -472,7 +474,7 @@ after_onset %>%
     expand_limits(x = c(.1, .9))
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/by-condition-12.png" width="80%" />
+<img src="assets/figure/02-by-condition-12.png" width="80%" />
 
 But given that the groups differ in vocabulary, we can see the same pattern of results, kind of, by binning children based on EVT scores.
 
@@ -496,7 +498,7 @@ binned %>%
     align_axis_right()
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/evt-tertile-1.png" width="80%" />
+<img src="assets/figure/02-evt-tertile-1.png" width="80%" />
 
 The spaghetti plot shows that there are indeed more low-EVT children in the cochlear implant group.
 
@@ -520,7 +522,7 @@ binned %>%
     align_axis_right()
 ```
 
-<img src="02-plot-data_files/figure-markdown_github-ascii_identifiers/evt-tertile-spaghetti-1.png" width="100%" />
+<img src="assets/figure/02-evt-tertile-spaghetti-1.png" width="100%" />
 
 ### Get descriptives for slide
 

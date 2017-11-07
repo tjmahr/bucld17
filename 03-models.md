@@ -1,7 +1,7 @@
 Growth curve models
 ================
 Tristan Mahr
-2017-10-31
+2017-11-07
 
 -   [Set up](#set-up)
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)
@@ -11,6 +11,8 @@ Tristan Mahr
     -   [Mispronunciations](#mispronunciations)
     -   [Real words](#real-words)
     -   [Nonword models](#nonword-models)
+
+This script fits the growth curve models for the analyses.
 
 Set up
 ------
@@ -243,7 +245,7 @@ summary(m_ns)
 
 We can plot the growth curve fixed effects which describe how the average child in each group x condition performs.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/overall-fits-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/overall-fits-2.png" width="80%" />
+<img src="assets/figure/03-overall-fits-1.png" width="80%" /><img src="assets/figure/03-overall-fits-2.png" width="80%" />
 
 Fit the models that include vocabulary isze
 -------------------------------------------
@@ -476,7 +478,7 @@ summary(m_mp_3b)
 
 The last two plots are from the Group + Vocab models.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-3.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/mp-plots-4.png" width="80%" />
+<img src="assets/figure/03-mp-plots-1.png" width="80%" /><img src="assets/figure/03-mp-plots-2.png" width="80%" /><img src="assets/figure/03-mp-plots-3.png" width="80%" /><img src="assets/figure/03-mp-plots-4.png" width="80%" />
 
 Model comparison here should be taken with a grain of salt because we are adding predictors in batches of four coefficients (the predictor's main effect and interactions with time). AIC and BIC penalize fit measures based on number of parameters, so we are adding big penalities with each additional predictor. Consider this more of coarse look at how batches of coefficients improve model fit.
 
@@ -726,7 +728,7 @@ summary(m_rw_3b)
 
 The last two plots are from the Group + Vocab model.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-3.png" width="80%" />
+<img src="assets/figure/03-rw-plots-1.png" width="80%" /><img src="assets/figure/03-rw-plots-2.png" width="80%" /><img src="assets/figure/03-rw-plots-3.png" width="80%" />
 
 This final plot is from the Group x Vocab model. I think the Normal Hearing side is overly sensitive to some outlying behavior in the high EVT normal hearing group.
 
@@ -747,7 +749,7 @@ ggplot(fits %>% filter(Model == "Group x Vocab.")) +
   ggtitle("Vocabulary effects in correct production condition")
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2-1.png" width="80%" />
+<img src="assets/figure/03-rw-plots-2-1.png" width="80%" />
 
 ``` r
 
@@ -771,7 +773,7 @@ d_rw %>%
     ggtitle("Vocabulary effects in correct production condition")
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/rw-plots-2-2.png" width="80%" />
+<img src="assets/figure/03-rw-plots-2-2.png" width="80%" />
 
 ``` r
 do.call(anova, unname(models))
@@ -1018,7 +1020,7 @@ summary(m_ns_3b)
 
 The last two plots are from the Group + Vocab model.
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-1.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-2.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-3.png" width="80%" /><img src="03-models_files/figure-markdown_github-ascii_identifiers/ns-plots-4.png" width="80%" />
+<img src="assets/figure/03-ns-plots-1.png" width="80%" /><img src="assets/figure/03-ns-plots-2.png" width="80%" /><img src="assets/figure/03-ns-plots-3.png" width="80%" /><img src="assets/figure/03-ns-plots-4.png" width="80%" />
 
 ``` r
 do.call(anova, unname(models))
@@ -1057,4 +1059,4 @@ d_ns %>%
     align_axis_right()
 ```
 
-<img src="03-models_files/figure-markdown_github-ascii_identifiers/vocab-boxplot-1.png" width="80%" />
+<img src="assets/figure/03-vocab-boxplot-1.png" width="80%" />

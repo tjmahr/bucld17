@@ -15,20 +15,13 @@ screening-results = \
 model-data = \
 	data/model.csv.gz
 
-all: 04-maybe-bias.md 03-models.md
+all: 04-maybe-bias.md 03-models.md 02-plot-data.md 01-data-screening.md
 
 04-maybe-bias.md: 04-maybe-bias.Rmd data/bias.csv.gz plotting-helpers.R
 	$(rscriptv) -e 'rmarkdown::render("$<")'
 
 03-models.md: 03-models.Rmd $(model-data) plotting-helpers.R
 	$(rscriptv) -e 'rmarkdown::render("$<")'
-
-preview: 03-models.md
-	open 03-models.html
-
-check: $()
-	$(rscriptv) -e 'list.files(pattern = "unnamed", recursive = TRUE, full.names = TRUE)'
-
 
 # Main plot of growth curves also saves files used for growth curve models
 02-plot-data.md $(model-data) data/bias.csv.gz: 02-plot-data.Rmd $(screening-results) plotting-helpers.R
@@ -37,19 +30,21 @@ check: $()
 01-data-screening.md $(screening-results): 01-data-screening.Rmd $(database-results)
 	$(rscriptv) -e 'rmarkdown::render("$<")'
 
-$(database-results): get-data.R
-	$(rscriptv) $<
+00-get-data.md: 00-get-data.Rmd
+	$(rscriptv) -e 'rmarkdown::render("$<")'
+
+$(database-results): 00-get-data.md
+
+
+preview: 03-models.md
+	open 03-models.html
+
+check: $()
+	$(rscriptv) -e 'list.files(pattern = "unnamed", recursive = TRUE, full.names = TRUE)'
 
 clean:
-	rm *.html
+	rm -f *.html;
+	rm -f 0*.md;
+	rm -f assets/figure/*.png;
 
-## variables   : Print variables.
-# .PHONY : variables help
-# variables :
-# 	@echo database-results: $(database-results)
-# 	@echo screening-results: $(screening-results)
-
-# help : Makefile
-# 	@sed -n 's/^##//p' $<
-
-.PHONY: clean all check
+.PHONY: clean all check preview

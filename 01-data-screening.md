@@ -1,7 +1,7 @@
 Data screening
 ================
 Tristan Mahr
-2017-10-26
+2017-11-07
 
 -   [Set up](#set-up)
 -   [Remove blocks from the bad version of the experiment](#remove-blocks-from-the-bad-version-of-the-experiment)
@@ -11,6 +11,8 @@ Tristan Mahr
 -   [Remove unpaired children](#remove-unpaired-children)
 -   [Data screening counts](#data-screening-counts)
 -   [Clean up](#clean-up)
+
+This script screens the eyetracking data by removing unreliable trials and unreliable blocks of trials. It preserves the pairs of matched children. (If a child is removed for have no reliable eyetracking data, their match is also removed.) Counts of trials and children at each step of screening are printed too.
 
 Set up
 ------

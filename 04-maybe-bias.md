@@ -1,12 +1,14 @@
 Consider the first image viewed
 ================
 Tristan Mahr
-2017-10-31
+2017-11-07
 
 -   [Set up](#set-up)
     -   [Add orthogonal polynomials](#add-orthogonal-polynomials)
     -   [Prep the datasets](#prep-the-datasets)
 -   [Group by initial image models](#group-by-initial-image-models)
+
+This script fits an exploratory growth curve model where looks are re-aggregated based on where the child fixated at the onset of the noun.
 
 Set up
 ------
@@ -236,4 +238,4 @@ summary(m_ns)
 
 We can plot the growth curve fixed effects which describe how the average child in each group x condition x initial-look performs.
 
-<img src="04-maybe-bias_files/figure-markdown_github-ascii_identifiers/overall-fits-1.png" width="80%" /><img src="04-maybe-bias_files/figure-markdown_github-ascii_identifiers/overall-fits-2.png" width="80%" /><img src="04-maybe-bias_files/figure-markdown_github-ascii_identifiers/overall-fits-3.png" width="80%" /><img src="04-maybe-bias_files/figure-markdown_github-ascii_identifiers/overall-fits-4.png" width="80%" />
+<img src="assets/figure/04-overall-fits-1.png" width="80%" /><img src="assets/figure/04-overall-fits-2.png" width="80%" /><img src="assets/figure/04-overall-fits-3.png" width="80%" /><img src="assets/figure/04-overall-fits-4.png" width="80%" />
