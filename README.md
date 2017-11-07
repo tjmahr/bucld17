@@ -1,7 +1,11 @@
 # Spoken word recognition of children with cochlear implants
 
-Research compendium for our presentation at the 42nd annual Boston University
-Conference on Language Development.
+Research compendium for [our presentation](./mahr-edwards-bucld42-ci-word-recognition.pdf) 
+at BUCLD 42:
+
+> Mahr, T., & Edwards, J. R. (2017, November). **Spoken word recognition of
+children with cochlear implants**. Presentation at the 42nd annual Boston
+University Conference on Language Development, Boston, MA.
 
 ## Repository contents
 
@@ -51,9 +55,10 @@ scripts.
 
 `Makefile` is a makefile to automate running and rendering the notebook files.
 
-The code's `LICENSE` is the GPL-3, but I don't think that should matter. The
+The code's `LICENSE` is the GPL-3, but I don't think that should matter because 
+the code is really tailored for this data-set. The
 data is copyrighted and belongs to the University of Wisconsin–Madison, 
-I think. (We collected data at two different university labs.)
+I think. (We collected data at two different university labs.) I don't know.
 
 ## Additional information
 
@@ -101,11 +106,3 @@ at recognizing highly familiar words, even in a two-image LWL
 paradigm. These results suggest that the impoverished signal
 of the CI may result in more uncertainty and longer lexical
 decision times, especially for ambiguous speech cues.
-
-### APA-format citation
-
-This bit is mostly to help me copy-and-paste it.
-
-Mahr, T., & Edwards, J. R. (2017, November). **Spoken word recognition of
-children with cochlear implants**. Presentation at the 42nd annual Boston
-University Conference on Language Development, Boston, MA.
